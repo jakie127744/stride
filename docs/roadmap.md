@@ -15,10 +15,10 @@ Status as of 16 Aug 2026. See [`docs/foundation.md`](foundation.md) for the reas
   `MediaSessionService` + `ExoPlayer` wiring, audio focus/ducking cycle (tested against Spotify/YouTube Music/a podcast app), cue-script trigger engine, offline voice pack + TTS fallback, Doze/background-execution testing.
 
 - [ ] **Phase 5 — GPS & Fitness Tracking**
-  Fused location + GPS smoothing, Health Connect read/write, scoped permission flows, Live Track implementation.
+  Fused location + GPS smoothing, Health Connect read/write, scoped permission flows, Live Track implementation, outdoor/treadmill session toggle, Open-Meteo weather fetch + condition-aware coaching adjustments (heat/humidity pace guidance, hydration cues, cold warm-up extension).
 
-- [ ] **Phase 6 — Custom Workouts & Adaptive Scheduling**
-  Interval/tempo builder, negative-split pacing calculator, adaptive scheduler (compress/shift/regress), shoe mileage tracking tied to run completion.
+- [ ] **Phase 6 — Custom Workouts, Adaptive Scheduling & Performance Insights**
+  Interval/tempo builder, negative-split pacing calculator, adaptive scheduler (compress/shift/regress), shoe mileage tracking tied to run completion, `:feature:insights` dashboard (weather-normalized pace trend, training load/consistency, HR zone distribution, VO2 max trend, personal bests).
 
 - [ ] **Phase 7 — Polish & Animations**
   M3 Expressive motion pass tuned against real run data, deliberate micro-interactions on in-run controls, Baseline Profiles + macrobenchmarks, full accessibility/reduced-motion audit.

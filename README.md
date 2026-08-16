@@ -17,14 +17,16 @@ core/
   designsystem/         M3 Expressive theme, color/type tokens, shared components
   common/                dispatchers, result types, shared utilities
   database/              Room: runs, plans, sessions, shoe profiles, cue scripts
-  data/                  repositories — single source of truth over database + health
+  data/                  repositories — single source of truth over database + health + weather
   health/                Health Connect read/write wrapper
+  weather/               Open-Meteo client — conditions for outdoor sessions
 feature/
   onboarding/            track selection, first-run flow
   plan/                  beginner + pro plan builder, adaptive scheduler
-  run/                   active-run screen, Media3 audio engine
+  run/                   active-run screen, Media3 audio engine, outdoor/treadmill toggle
   history/               run history, shoe mileage tracker
   livetrack/             Live Track safety sharing
+  insights/              performance statistics — pace trend, training load, VO2 max, PRs
 ```
 
 `:feature:*` modules depend only on `:core:*` — never on each other.

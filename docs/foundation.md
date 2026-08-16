@@ -46,6 +46,24 @@ On a missed session, in order of preference: **compress** (shift remaining sessi
 - **Shoe mileage:** multiple shoe profiles, auto-accumulated distance, configurable retirement threshold (default 500km/~300mi) with a proactive nudge.
 - **Live Track:** one-tap, time-limited location-share link, auto-expiring, reduced-frequency polling independent of run-GPS, optional inactivity alert.
 
+### Environment: outdoor vs. treadmill, and weather adaptation
+Every session starts with one question the app asks, not assumes: **"Running outside or on a treadmill today?"** — defaulted to the runner's last choice, one tap to change.
+
+- **Outdoor:** GPS drives pace/distance as normal. On session start, the app pulls current conditions (temperature, humidity, wind, precipitation) for the runner's location from a weather API (Open-Meteo — no key/cost, good enough accuracy for training adaptation over a paid tier). Conditions feed two things:
+  - **Live coaching adjustments:** heat/humidity above a threshold shortens the recommended pace target and adds hydration cues; cold extends the warm-up; wind/rain get an acknowledgment cue ("windy out there — pace will look slower, that's expected") rather than silence that lets the runner think they're losing fitness.
+  - **Session metadata:** temperature/humidity/conditions are stored against the run record, not just used live and discarded — this is what makes the statistics feature below able to explain a slow run instead of just flagging it.
+- **Treadmill:** GPS is switched off for pace/distance; the session instead reads belt speed/incline if the treadmill exposes Bluetooth FTMS data, or falls back to manual pace entry adjusted by accelerometer-based cadence. No weather is fetched or shown — the coaching engine's interval/tempo logic works identically either way, since it's already time- and effort-driven, not GPS-driven, per the audio engine spec above.
+- Location permission for weather is requested only when "Outdoor" is chosen, following the same scoped-permission approach as Health Connect above.
+
+### Performance Insights (statistics)
+A dedicated insights view (`:feature:insights`, reading from `:core:data`) turns the run history the app is already collecting into trends the runner can act on, for both tracks:
+
+- **Pace trend:** rolling-average pace per week/month, plotted against goal pace (Pro) or plan-expected pace (Beginner) — shown *weather-normalized* where outdoor sessions have conditions attached, so a hot-week slowdown reads as expected rather than as lost fitness.
+- **Training load & consistency:** planned vs. completed sessions, current streak, and a rolling weekly-volume chart — this is where the adaptive scheduler's compress/shift/regress history becomes visible to the runner instead of invisible.
+- **HR zone distribution** across recent sessions (Pro Track primarily, shown once HR data exists for Beginner).
+- **VO2 max trend** over time where Health Connect provides it, rather than only a single current value.
+- **Personal bests** — fastest 1K/5K, longest run, longest streak — surfaced as quiet milestones rather than competitive pressure, consistent with the peak-end framing used in the run-summary screen.
+
 ## Roadmap
 
 See [`docs/roadmap.md`](roadmap.md) for the full seven-phase plan and current status.
