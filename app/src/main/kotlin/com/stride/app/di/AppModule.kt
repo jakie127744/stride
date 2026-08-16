@@ -1,8 +1,8 @@
 package com.stride.app.di
 
+import com.stride.app.audio.Media3VoiceCueSpeaker
 import com.stride.app.location.FusedLocationTracker
 import com.stride.app.location.LocationTracker
-import com.stride.app.ui.AndroidVoiceCueSpeaker
 import com.stride.app.ui.VoiceCueSpeaker
 import dagger.Binds
 import dagger.Module
@@ -18,7 +18,7 @@ import dagger.hilt.components.SingletonComponent
 abstract class AppModule {
 
     @Binds
-    abstract fun bindVoiceCueSpeaker(impl: AndroidVoiceCueSpeaker): VoiceCueSpeaker
+    abstract fun bindVoiceCueSpeaker(impl: Media3VoiceCueSpeaker): VoiceCueSpeaker
 
     @Binds
     abstract fun bindLocationTracker(impl: FusedLocationTracker): LocationTracker

@@ -1,5 +1,6 @@
 package com.stride.app.run
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,9 +8,12 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import com.stride.app.MainActivity
 import com.stride.app.R
@@ -41,7 +45,20 @@ class RunSessionService : Service() {
     override fun onCreate() {
         super.onCreate()
         createChannelIfNeeded()
-        startForeground(NOTIFICATION_ID, buildNotification("Getting your session ready…"))
+        // The manifest declares BOTH "location" and "dataSync" as types this service can start
+        // as (see the manifest comment). Android 14+ (targetSdk 35) enforces two things found by
+        // actually running this on-device, not by reading docs: starting AS "location" without
+        // the permission already granted throws a SecurityException, AND declaring no type at
+        // all ("none") is itself prohibited — a real type must always be picked. So: "location"
+        // when we genuinely have GPS permission (the common outdoor case), "dataSync" as the
+        // honest fallback otherwise — treadmill sessions never needed location anyway, and an
+        // outdoor session where the runner denied the permission prompt but continued shouldn't
+        // crash the app over it.
+        val hasLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val type = if (hasLocationPermission) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification("Getting your session ready…"), type)
 
         observeJob = engine.state
             .onEach { state ->

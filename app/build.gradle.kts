@@ -58,6 +58,13 @@ dependencies {
     implementation(libs.maplibre.android.sdk)
     implementation(libs.maplibre.android.sdk.geojson)
 
+    // Phase 4 real audio engine — see RunAudioService/Media3VoiceCueSpeaker. ExoPlayer's own
+    // AudioFocusManager (setAudioAttributes(..., handleAudioFocus = true)) is what actually
+    // implements docs/foundation.md's "request transient duck focus, play a clip, release focus"
+    // cycle — no hand-rolled AudioManager.requestAudioFocus code needed.
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

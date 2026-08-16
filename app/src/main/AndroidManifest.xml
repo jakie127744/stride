@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- RunSessionService's fallback type when it's keeping a treadmill session (or an outdoor
+         session where location permission was denied) alive — Android 14+ prohibits declaring
+         no type at all, so this covers "no real GPS work, still needs a real FGS type". -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -31,17 +35,32 @@
             </intent-filter>
         </activity>
 
-        <!-- Keeps the process alive during an active session so RunSessionEngine's voice cues
-             and GPS tracking survive the app being backgrounded — see RunSessionService and
-             docs/roadmap.md. type="location" because that's the service's real core function
-             (GPS tracking); voice cues via TextToSpeech aren't "media playback" in the Play
-             Store review sense, so foregroundServiceTypeMediaPlayback isn't declared here to
-             avoid misrepresenting what this service does. The real Media3 MediaSessionService
-             in Phase 4 will legitimately need that type when it lands. -->
+        <!-- Keeps the process alive during an active session so RunSessionEngine's GPS tracking
+             survives the app being backgrounded — see RunSessionService and docs/roadmap.md.
+             Declares BOTH types it can legitimately start as: "location" for real outdoor GPS
+             work, "dataSync" as the fallback for treadmill sessions (no GPS at all) or an
+             outdoor session where location permission was denied (found by running this
+             on-device: Android 14+ requires a real declared type, "none" is itself prohibited —
+             RunSessionService.onCreate() picks which declared type to actually start with based
+             on current permission state). Voice cues live in their own real media-session
+             service below (Phase 4) rather than being declared here. -->
         <service
             android:name=".run.RunSessionService"
             android:exported="false"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location|dataSync" />
+
+        <!-- The real Phase 4 audio engine — see RunAudioService's doc comment for why this is a
+             second service rather than folded into RunSessionService above (Service and
+             MediaSessionService can't be multiply inherited). type="mediaPlayback" is honest
+             here: this service's actual job is hosting an active MediaSession + ExoPlayer. -->
+        <service
+            android:name=".audio.RunAudioService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>

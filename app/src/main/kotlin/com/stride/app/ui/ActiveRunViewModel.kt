@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.navigation.toRoute
 import com.stride.app.audio.MusicController
+import com.stride.app.audio.RunAudioService
 import com.stride.app.navigation.Destination
 import com.stride.app.run.ActiveRunUiState
 import com.stride.app.run.RunSessionEngine
@@ -16,9 +17,10 @@ import javax.inject.Inject
 
 /**
  * A thin adapter over [RunSessionEngine] now — the engine owns the actual state/logic in its
- * own process-scoped coroutine, so it (and [RunSessionService], which keeps the process alive)
- * survive this ViewModel being torn down when the app backgrounds. See RunSessionEngine's doc
- * for why that split exists.
+ * own process-scoped coroutine, so it (and [RunSessionService]/[RunAudioService], which keep the
+ * process alive) survive this ViewModel being torn down when the app backgrounds. See
+ * RunSessionEngine's doc for why that split exists, and RunAudioService's for why GPS/location
+ * and voice-cue/media playback are two separate foreground services rather than one.
  */
 @HiltViewModel
 class ActiveRunViewModel @Inject constructor(
@@ -34,16 +36,19 @@ class ActiveRunViewModel @Inject constructor(
 
     fun start() {
         RunSessionService.start(context)
+        RunAudioService.start(context)
         engine.start(route.planSessionId, route.outdoor, route.shoeId)
     }
 
     fun togglePause() = engine.togglePause()
     fun skipStep() = engine.skipStep()
 
-    /** Abandon the session early — stops the foreground service and the engine's jobs together,
-     * so backing out mid-run doesn't leave GPS/notification running in the background forever. */
+    /** Abandon the session early — stops both foreground services and the engine's jobs
+     * together, so backing out mid-run doesn't leave GPS/notification/media session running in
+     * the background forever. */
     fun cancelRun() {
         engine.cancel()
         RunSessionService.stop(context)
+        RunAudioService.stop(context)
     }
 }
