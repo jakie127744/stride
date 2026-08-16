@@ -1,12 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.stride.core.health"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -19,11 +20,16 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
 }
 
 dependencies {
-    // Phase 2 scaffold — module is empty; real dependencies land with its Phase 3/4/5 implementation.
+    api(project(":core:common")) // DispatcherProvider appears in HealthConnectRepositoryImpl's constructor
+
     implementation(libs.androidx.core.ktx)
+    implementation(libs.healthconnect.client)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
     testImplementation(libs.junit)
 }

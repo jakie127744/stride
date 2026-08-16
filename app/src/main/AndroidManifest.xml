@@ -17,6 +17,20 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- Phase 5 — see core:health/HealthConnectRepository. Every call site is best-effort and
+         degrades gracefully with no permission granted (or Health Connect not installed at all),
+         same as every other permission-gated feature in this app. -->
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.WRITE_DISTANCE" />
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+
+    <!-- Required for HealthConnectClient.getSdkStatus() to actually detect whether the Health
+         Connect provider app is installed, rather than always reporting unavailable — package
+         visibility (Android 11+) hides other apps' presence by default without this. -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+    </queries>
+
     <application
         android:name=".StrideApplication"
         android:allowBackup="true"

@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.stride.core.data"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -26,9 +26,13 @@ dependencies {
     // api, not implementation: repository interfaces here return entity types and Flow directly
     // (see android-data-layer skill — no domain-model layer yet, so entities ARE the public
     // contract for now), so consumers need these modules' public surface too.
-    // :core:health and :core:weather join this list once their Phase 5 clients exist.
     api(project(":core:common"))
     api(project(":core:database"))
+
+    // implementation, not api: HealthConnectRepository is an internal collaborator inside
+    // RunRepositoryImpl (HR enrichment + best-effort write-out on recordRun), not part of any
+    // repository interface's own return-type surface.
+    implementation(project(":core:health"))
 
     implementation(libs.androidx.core.ktx)
 
