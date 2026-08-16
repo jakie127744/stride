@@ -4,9 +4,10 @@ import kotlinx.serialization.Serializable
 
 /**
  * Type-safe Navigation Compose routes (2.8+). One object per screen from the wireframes —
- * see the Stride Wireframes artifact for what each of these actually looks like. Real screens
- * move into their :feature:* module as each ships; these placeholders exist so the nav graph
- * and DI wiring can be proven end-to-end in Phase 3 rather than left unverified.
+ * see the Stride Wireframes artifact for what each of these actually looks like. Onboarding,
+ * PreRunEnvironment, ActiveRun, and RunSummary are real (a minimal but functional vertical
+ * slice, ahead of their full Phase 4/5/6 scope); History, Insights, and LiveTrack are still
+ * placeholders, reachable via Home's dev-only preview links until their phase lands.
  */
 sealed interface Destination {
     @Serializable
@@ -16,10 +17,10 @@ sealed interface Destination {
     data object Onboarding : Destination
 
     @Serializable
-    data object PreRunEnvironment : Destination
+    data class PreRunEnvironment(val planSessionId: Long?) : Destination
 
     @Serializable
-    data class ActiveRun(val planSessionId: Long?) : Destination
+    data class ActiveRun(val planSessionId: Long?, val outdoor: Boolean = true) : Destination
 
     @Serializable
     data class RunSummary(val runId: Long) : Destination

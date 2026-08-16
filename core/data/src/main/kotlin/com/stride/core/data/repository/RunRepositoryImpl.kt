@@ -31,4 +31,6 @@ class RunRepositoryImpl @Inject constructor(
         }
         id
     }
+
+    override suspend fun updateRpe(runId: Long, rpe: Int) = runSessionDao.updateRpe(runId, rpe)
 }

@@ -8,6 +8,7 @@ import com.stride.core.database.entity.PlanSessionEntity
 import com.stride.core.database.entity.PlanSessionStatus
 import com.stride.core.database.entity.SessionStepEntity
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 import javax.inject.Inject
 
 class PlanRepositoryImpl @Inject constructor(
@@ -20,6 +21,9 @@ class PlanRepositoryImpl @Inject constructor(
     override fun observeSessionsForPlan(planId: Long): Flow<List<PlanSessionEntity>> =
         planDao.observeSessionsForPlan(planId)
 
+    override suspend fun getSessionOn(planId: Long, date: LocalDate): PlanSessionEntity? =
+        planDao.getSessionOn(planId, date)
+
     override suspend fun createPlan(plan: PlanEntity, sessions: List<PlanSessionEntity>): Long =
         database.withTransaction {
             val planId = planDao.insertPlan(plan)
@@ -29,8 +33,8 @@ class PlanRepositoryImpl @Inject constructor(
             planId
         }
 
-    override suspend fun markSessionCompleted(session: PlanSessionEntity) {
-        planDao.updateSession(session.copy(status = PlanSessionStatus.COMPLETED))
+    override suspend fun markSessionCompleted(planSessionId: Long) {
+        planDao.updateSessionStatus(planSessionId, PlanSessionStatus.COMPLETED)
     }
 
     override fun observeStepsForSession(planSessionId: Long): Flow<List<SessionStepEntity>> =

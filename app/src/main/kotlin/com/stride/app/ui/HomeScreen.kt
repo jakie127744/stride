@@ -3,6 +3,7 @@ package com.stride.app.ui
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,9 +34,11 @@ import com.stride.core.designsystem.StrideThemeExtras
  */
 @Composable
 fun HomeScreen(
-    onStartSession: () -> Unit,
+    onGetStarted: () -> Unit,
+    onStartSession: (planSessionId: Long) -> Unit,
     onOpenHistory: () -> Unit,
     onOpenInsights: () -> Unit,
+    onPreviewDestination: (String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -64,18 +67,19 @@ fun HomeScreen(
         when {
             uiState.isLoading -> Text("Loading…", style = MaterialTheme.typography.bodyMedium)
 
-            uiState.activePlan == null -> Box(
+            uiState.activePlan == null -> Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(18.dp))
                     .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    "No active plan yet — plan creation lands in Phase 6. " +
-                        "This screen is already reading live (empty) data from Room via Hilt.",
+                    "No active plan yet. Pick a track to get your first session.",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Start,
                 )
+                Button(onClick = onGetStarted, modifier = Modifier.fillMaxWidth()) { Text("Get started") }
             }
 
             else -> Column(
@@ -95,8 +99,8 @@ fun HomeScreen(
                     style = MaterialTheme.typography.titleLarge,
                     color = cardContentColor,
                 )
-                if (hasSessionToday) {
-                    Button(onClick = onStartSession) { Text("Start Session") }
+                uiState.todaySession?.let { session ->
+                    Button(onClick = { onStartSession(session.id) }) { Text("Start Session") }
                 }
             }
         }
@@ -110,6 +114,32 @@ fun HomeScreen(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = onOpenHistory, modifier = Modifier.fillMaxWidth()) { Text("History") }
             Button(onClick = onOpenInsights, modifier = Modifier.fillMaxWidth()) { Text("Insights") }
+        }
+
+        // TEMPORARY, dev-only: History/Insights/Live Track are still placeholders reachable
+        // above, but Active Run and Run Summary need a real session to open normally — this
+        // lets them be previewed with demo data. Delete once they have other real entry points.
+        Text(
+            "Preview other screens (dev only)",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            listOf(
+                "Active run (demo)" to "run",
+                "Run summary (demo)" to "summary",
+                "Live Track" to "livetrack",
+            ).forEach { (label, route) ->
+                Text(
+                    "› $label",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onPreviewDestination(route) }
+                        .padding(vertical = 6.dp),
+                )
+            }
         }
     }
 }

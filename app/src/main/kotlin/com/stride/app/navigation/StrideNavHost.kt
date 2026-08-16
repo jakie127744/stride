@@ -6,21 +6,21 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.stride.app.ui.ActiveRunPlaceholderScreen
+import com.stride.app.ui.ActiveRunScreen
 import com.stride.app.ui.HistoryPlaceholderScreen
 import com.stride.app.ui.HomeScreen
 import com.stride.app.ui.InsightsPlaceholderScreen
 import com.stride.app.ui.LiveTrackPlaceholderScreen
-import com.stride.app.ui.OnboardingPlaceholderScreen
-import com.stride.app.ui.PreRunEnvironmentPlaceholderScreen
-import com.stride.app.ui.RunSummaryPlaceholderScreen
+import com.stride.app.ui.OnboardingScreen
+import com.stride.app.ui.PreRunEnvironmentScreen
+import com.stride.app.ui.RunSummaryScreen
+import com.stride.core.common.RunEnvironment
 import com.stride.core.designsystem.LocalReducedMotion
 import com.stride.core.designsystem.StrideMotion
 
@@ -60,24 +60,63 @@ fun StrideNavHost(
     ) {
         composable<Destination.Home> {
             HomeScreen(
-                onStartSession = { navController.navigate(Destination.PreRunEnvironment) },
+                onGetStarted = { navController.navigate(Destination.Onboarding) },
+                onStartSession = { planSessionId ->
+                    navController.navigate(Destination.PreRunEnvironment(planSessionId))
+                },
                 onOpenHistory = { navController.navigate(Destination.History) },
                 onOpenInsights = { navController.navigate(Destination.Insights) },
+                onPreviewDestination = { route ->
+                    val destination: Destination? = when (route) {
+                        "run" -> Destination.ActiveRun(planSessionId = null)
+                        "summary" -> Destination.RunSummary(runId = 0)
+                        "livetrack" -> Destination.LiveTrack
+                        else -> null
+                    }
+                    destination?.let(navController::navigate)
+                },
             )
         }
-        composable<Destination.Onboarding> { OnboardingPlaceholderScreen() }
-        composable<Destination.PreRunEnvironment> {
-            PreRunEnvironmentPlaceholderScreen(
-                onContinue = { navController.navigate(Destination.ActiveRun(planSessionId = null)) },
+        composable<Destination.Onboarding> {
+            OnboardingScreen(
+                onTrackSelected = { planSessionId ->
+                    navController.navigate(Destination.PreRunEnvironment(planSessionId)) {
+                        popUpTo<Destination.Home>()
+                    }
+                },
             )
         }
-        composable<Destination.ActiveRun> { backStackEntry ->
-            val route: Destination.ActiveRun = backStackEntry.toRoute()
-            ActiveRunPlaceholderScreen(planSessionId = route.planSessionId)
+        composable<Destination.PreRunEnvironment> { backStackEntry ->
+            val route: Destination.PreRunEnvironment = backStackEntry.toRoute()
+            PreRunEnvironmentScreen(
+                planSessionId = route.planSessionId,
+                onContinue = { environment ->
+                    navController.navigate(
+                        Destination.ActiveRun(
+                            planSessionId = route.planSessionId,
+                            outdoor = environment == RunEnvironment.OUTDOOR,
+                        ),
+                    )
+                },
+            )
         }
-        composable<Destination.RunSummary> { backStackEntry ->
-            val route: Destination.RunSummary = backStackEntry.toRoute()
-            RunSummaryPlaceholderScreen(runId = route.runId)
+        composable<Destination.ActiveRun> {
+            ActiveRunScreen(
+                onFinished = { runId ->
+                    navController.navigate(Destination.RunSummary(runId)) {
+                        popUpTo<Destination.Home>()
+                    }
+                },
+            )
+        }
+        composable<Destination.RunSummary> {
+            RunSummaryScreen(
+                onDone = {
+                    navController.navigate(Destination.Home) {
+                        popUpTo<Destination.Home> { inclusive = true }
+                    }
+                },
+            )
         }
         composable<Destination.History> { HistoryPlaceholderScreen() }
         composable<Destination.Insights> { InsightsPlaceholderScreen() }

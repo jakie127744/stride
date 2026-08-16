@@ -35,6 +35,9 @@ interface PlanDao {
     @Update
     suspend fun updateSession(session: PlanSessionEntity)
 
+    @Query("UPDATE plan_sessions SET status = :status WHERE id = :planSessionId")
+    suspend fun updateSessionStatus(planSessionId: Long, status: PlanSessionStatus)
+
     @Query(
         "SELECT * FROM plan_sessions WHERE planId = :planId AND status = :status " +
             "AND scheduledDate < :beforeDate ORDER BY scheduledDate ASC",

@@ -21,4 +21,7 @@ interface RunSessionDao {
 
     @Insert
     suspend fun insert(run: RunSessionEntity): Long
+
+    @Query("UPDATE run_sessions SET rpe = :rpe WHERE id = :runId")
+    suspend fun updateRpe(runId: Long, rpe: Int)
 }

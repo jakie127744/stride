@@ -15,4 +15,7 @@ interface RunRepository {
      * Returns the new run's id.
      */
     suspend fun recordRun(run: RunSessionEntity): Long
+
+    /** Captured on the post-run summary screen, after the run row already exists. */
+    suspend fun updateRpe(runId: Long, rpe: Int)
 }

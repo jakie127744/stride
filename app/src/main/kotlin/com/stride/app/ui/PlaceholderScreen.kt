@@ -59,19 +59,6 @@ fun PlaceholderScreen(title: String, subtitle: String) {
     }
 }
 
-@Composable fun OnboardingPlaceholderScreen() = PlaceholderScreen("Onboarding", "Track selection lands in Phase 4/6")
-
-@Composable
-fun PreRunEnvironmentPlaceholderScreen(onContinue: () -> Unit) =
-    PlaceholderScreen("Outside, or the belt?", "Environment + weather toggle — Phase 5")
-
-@Composable
-fun ActiveRunPlaceholderScreen(planSessionId: Long?) =
-    PlaceholderScreen("Active run", "GPS + audio engine — Phase 4/5")
-
-@Composable
-fun RunSummaryPlaceholderScreen(runId: Long) = PlaceholderScreen("Nice work", "Run summary — Phase 5/6")
-
 @Composable fun HistoryPlaceholderScreen() = PlaceholderScreen("History", "Run history + shoe log — Phase 6")
 
 @Composable fun InsightsPlaceholderScreen() = PlaceholderScreen("Insights", "Performance statistics — Phase 6")
