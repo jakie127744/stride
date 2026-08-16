@@ -5,7 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-enum class StepType { WALK, RUN, REST }
+enum class StepType { WALK, RUN, REST, STRETCH }
 
 /**
  * One ordered step inside a session's pacing plan — e.g. "walk 4:00 at 3.0 mph, then run 1:00
@@ -37,4 +37,7 @@ data class SessionStepEntity(
     val durationSeconds: Int? = null,
     val distanceMeters: Double? = null,
     val targetSpeedMetersPerSecond: Double? = null,
+    /** Named stretch/exercise for STRETCH steps only (e.g. "Calf stretch") — see
+     * [com.stride.core.common.StretchExercise]. Null for every other step type. */
+    val label: String? = null,
 )

@@ -2,9 +2,12 @@ package com.stride.app.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.stride.core.common.StretchExercise
+import com.stride.core.common.StretchPhase
 import com.stride.core.common.Track
 import com.stride.core.common.mphToMetersPerSecond
 import com.stride.core.common.recommendedPresetForWeek
+import com.stride.core.common.stretchRoutineFor
 import com.stride.core.data.repository.PlanRepository
 import com.stride.core.database.entity.PlanEntity
 import com.stride.core.database.entity.PlanSessionEntity
@@ -56,7 +59,26 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private fun buildSteps(track: Track): List<SessionStepEntity> = if (track == Track.BEGINNER) {
+    private fun buildSteps(track: Track): List<SessionStepEntity> {
+        val warmUp = stretchSteps(StretchPhase.WARM_UP)
+        val coolDown = stretchSteps(StretchPhase.COOL_DOWN)
+        return warmUp + mainSteps(track) + coolDown
+    }
+
+    /** Every session opens and closes with a real, named stretch routine — see
+     * docs/foundation.md "Warm-up, cool-down, and stretching". */
+    private fun stretchSteps(phase: StretchPhase): List<SessionStepEntity> =
+        stretchRoutineFor(phase).map { it.toStep() }
+
+    private fun StretchExercise.toStep(): SessionStepEntity = SessionStepEntity(
+        planSessionId = 0,
+        orderIndex = 0,
+        stepType = StepType.STRETCH,
+        durationSeconds = holdSeconds,
+        label = name,
+    )
+
+    private fun mainSteps(track: Track): List<SessionStepEntity> = if (track == Track.BEGINNER) {
         val preset = recommendedPresetForWeek(1)
         // 4 walk/run pairs — a real session length, without yet asking the runner how long
         // they want to go (that prompt is part of the Phase 5 pre-run environment screen).

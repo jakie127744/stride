@@ -20,7 +20,7 @@ import com.stride.core.database.entity.ShoeEntity
         SessionStepEntity::class,
         ShoeEntity::class,
     ],
-    version = 1,
+    version = 2, // v2: SessionStepEntity gained StepType.STRETCH + a nullable `label` column
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

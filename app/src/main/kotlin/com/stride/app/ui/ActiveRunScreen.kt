@@ -2,6 +2,7 @@ package com.stride.app.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -32,7 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stride.app.run.ActiveRunUiState
 import com.stride.core.database.entity.StepType
+import com.stride.core.designsystem.RunnerFigure
+import com.stride.core.designsystem.RunnerMode
 import com.stride.core.designsystem.StrideMotion
 import com.stride.core.designsystem.StrideThemeExtras
 import com.stride.core.designsystem.WeatherAnimation
@@ -54,9 +60,11 @@ fun ActiveRunScreen(
         if (state.isFinished && runId != null) onFinished(runId)
     }
 
-    val isWalk = state.currentStep?.stepType == StepType.WALK
+    // Stretch phases (warm-up/cool-down) read as calm, same as recovery — walk is also calm;
+    // only an active run rep gets the "effort" orange.
+    val isEffort = state.currentStep?.stepType == StepType.RUN
     val screenColor by animateColorAsState(
-        targetValue = if (isWalk) extendedColors.recovery else extendedColors.action,
+        targetValue = if (isEffort) extendedColors.action else extendedColors.recovery,
         animationSpec = tween(StrideMotion.DURATION_MEDIUM, easing = StrideMotion.StandardEasing),
         label = "runScreenColor",
     )
@@ -102,6 +110,20 @@ fun ActiveRunScreen(
     }
 }
 
+/** Buttons on this screen sit on a full-bleed colored background (orange or teal), not the
+ * app's surface — the default OutlinedButton content color is `colorScheme.primary`, which
+ * *is* that orange, so it vanishes against it. Every button here is explicitly white. */
+@Composable
+private fun WhiteOutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier,
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = .7f)),
+        content = { content() },
+    )
+}
+
 @Composable
 private fun RunTabContent(state: ActiveRunUiState, viewModel: ActiveRunViewModel) {
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -116,16 +138,20 @@ private fun RunTabContent(state: ActiveRunUiState, viewModel: ActiveRunViewModel
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(stepLabel(state.currentStep?.stepType), style = MaterialTheme.typography.labelLarge, color = Color.White)
+            RunnerFigure(
+                mode = runnerModeFor(state.currentStep?.stepType),
+                modifier = Modifier.size(width = 90.dp, height = 110.dp),
+            )
+            Text(stepLabel(state.currentStep), style = MaterialTheme.typography.labelLarge, color = Color.White)
             Text(
                 formatCountdown(state.remainingSeconds),
-                fontSize = 64.sp,
+                fontSize = 56.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
             )
             state.nextStep?.let {
                 Text(
-                    "Next: ${stepLabel(it.stepType)} ${formatCountdown(it.durationSeconds ?: 0)}",
+                    "Next: ${stepLabel(it)} ${formatCountdown(it.durationSeconds ?: 0)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = .85f),
                 )
@@ -146,21 +172,21 @@ private fun RunTabContent(state: ActiveRunUiState, viewModel: ActiveRunViewModel
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                OutlinedButton(onClick = viewModel.musicController::previous, modifier = Modifier.weight(1f)) {
+                WhiteOutlinedButton(onClick = viewModel.musicController::previous, modifier = Modifier.weight(1f)) {
                     Text("⏮")
                 }
-                OutlinedButton(onClick = viewModel.musicController::playPause, modifier = Modifier.weight(1f)) {
+                WhiteOutlinedButton(onClick = viewModel.musicController::playPause, modifier = Modifier.weight(1f)) {
                     Text("⏯")
                 }
-                OutlinedButton(onClick = viewModel.musicController::next, modifier = Modifier.weight(1f)) {
+                WhiteOutlinedButton(onClick = viewModel.musicController::next, modifier = Modifier.weight(1f)) {
                     Text("⏭")
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(onClick = viewModel::togglePause, modifier = Modifier.weight(1f)) {
+                WhiteOutlinedButton(onClick = viewModel::togglePause, modifier = Modifier.weight(1f)) {
                     Text(if (state.isPaused) "Resume" else "Pause")
                 }
-                OutlinedButton(onClick = viewModel::skipStep, modifier = Modifier.weight(1f)) {
+                WhiteOutlinedButton(onClick = viewModel::skipStep, modifier = Modifier.weight(1f)) {
                     Text("Skip")
                 }
             }
@@ -267,10 +293,17 @@ private fun WeatherTabContent(state: ActiveRunUiState) {
     }
 }
 
-private fun stepLabel(type: StepType?): String = when (type) {
+private fun runnerModeFor(type: StepType?): RunnerMode = when (type) {
+    StepType.RUN -> RunnerMode.RUN
+    StepType.STRETCH -> RunnerMode.STRETCH
+    StepType.WALK, StepType.REST, null -> RunnerMode.WALK
+}
+
+private fun stepLabel(step: com.stride.core.database.entity.SessionStepEntity?): String = when (step?.stepType) {
     StepType.WALK -> "Walk"
     StepType.RUN -> "Run"
     StepType.REST -> "Rest"
+    StepType.STRETCH -> step.label ?: "Stretch"
     null -> ""
 }
 

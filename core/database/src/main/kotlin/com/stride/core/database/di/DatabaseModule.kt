@@ -2,6 +2,7 @@ package com.stride.core.database.di
 
 import android.content.Context
 import androidx.room.Room
+import com.stride.core.database.MIGRATION_1_2
 import com.stride.core.database.StrideDatabase
 import com.stride.core.database.dao.PlanDao
 import com.stride.core.database.dao.RunSessionDao
@@ -23,7 +24,10 @@ object DatabaseModule {
         Room.databaseBuilder(context, StrideDatabase::class.java, StrideDatabase.DATABASE_NAME)
             // No destructive fallback: schema exports are versioned so real migrations can be
             // written once this ships — silently dropping a runner's history on upgrade isn't
-            // acceptable for what's effectively their training log.
+            // acceptable for what's effectively their training log. MIGRATION_1_2 is the first
+            // one of these, proving the policy out rather than reaching for
+            // fallbackToDestructiveMigration() the moment a real schema change showed up.
+            .addMigrations(MIGRATION_1_2)
             .build()
 
     @Provides

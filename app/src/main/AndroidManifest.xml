@@ -31,7 +31,17 @@
             </intent-filter>
         </activity>
 
-        <!-- MediaSessionService for the audio engine lands here in Phase 4 -->
+        <!-- Keeps the process alive during an active session so RunSessionEngine's voice cues
+             and GPS tracking survive the app being backgrounded — see RunSessionService and
+             docs/roadmap.md. type="location" because that's the service's real core function
+             (GPS tracking); voice cues via TextToSpeech aren't "media playback" in the Play
+             Store review sense, so foregroundServiceTypeMediaPlayback isn't declared here to
+             avoid misrepresenting what this service does. The real Media3 MediaSessionService
+             in Phase 4 will legitimately need that type when it lands. -->
+        <service
+            android:name=".run.RunSessionService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
     </application>
 </manifest>
