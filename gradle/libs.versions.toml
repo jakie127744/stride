@@ -4,7 +4,7 @@
 # since exact patch releases drift fast (Compose BOM, AGP, and Media3 especially).
 
 [versions]
-agp = "8.7.0"
+agp = "8.13.2"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.28"
 coreKtx = "1.15.0"
