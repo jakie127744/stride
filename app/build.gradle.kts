@@ -59,5 +59,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    // The Compose BOM applied via :core:designsystem's `api` only reaches the main
+    // `implementation` configuration — androidTestImplementation needs its own platform
+    // constraint, or ui-test-junit4 (declared without a version) can't resolve.
+    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 }

@@ -9,7 +9,7 @@ Build sequence and current status: [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Status
 
-🚧 Pre-alpha. Core architecture is in place (Room + repositories + Hilt DI + navigation + M3 theme) — feature screens are still placeholders as their phases land (see roadmap). Not yet build-verified: developed without an Android SDK available, so the first real check is opening it in Android Studio.
+🚧 Pre-alpha. Core architecture is in place (Room + repositories + Hilt DI + navigation + M3 theme) and syncs cleanly in Android Studio — feature screens are still placeholders as their phases land (see roadmap).
 
 ## Module structure
 
