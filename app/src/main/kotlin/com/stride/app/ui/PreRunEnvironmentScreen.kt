@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -43,11 +45,13 @@ import com.stride.core.designsystem.StrideThemeExtras
 @Composable
 fun PreRunEnvironmentScreen(
     planSessionId: Long?,
-    onContinue: (RunEnvironment) -> Unit,
+    onContinue: (RunEnvironment, shoeId: Long?) -> Unit,
     viewModel: PreRunEnvironmentViewModel = hiltViewModel(),
 ) {
     var selected by remember { mutableStateOf(RunEnvironment.OUTDOOR) }
+    var selectedShoeId by remember { mutableStateOf<Long?>(null) }
     val weatherState by viewModel.weather.collectAsStateWithLifecycle()
+    val shoes by viewModel.shoes.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -108,8 +112,27 @@ fun PreRunEnvironmentScreen(
             )
         }
 
+        if (shoes.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Which shoes?", style = MaterialTheme.typography.labelLarge)
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ShoeChip(label = "None", selected = selectedShoeId == null, onClick = { selectedShoeId = null })
+                    shoes.forEach { shoe ->
+                        ShoeChip(
+                            label = shoe.name,
+                            selected = selectedShoeId == shoe.id,
+                            onClick = { selectedShoeId = shoe.id },
+                        )
+                    }
+                }
+            }
+        }
+
         Button(
-            onClick = { onContinue(selected) },
+            onClick = { onContinue(selected, selectedShoeId) },
             modifier = Modifier.fillMaxWidth(),
         ) { Text(if (planSessionId != null) "Start Session" else "Preview run screen") }
     }
@@ -168,6 +191,22 @@ private fun WeatherCard(state: WeatherUiState) {
             }
         }
     }
+}
+
+@Composable
+private fun ShoeChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        label,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                RoundedCornerShape(999.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    )
 }
 
 @Composable

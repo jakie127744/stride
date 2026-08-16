@@ -90,11 +90,12 @@ fun StrideNavHost(
             val route: Destination.PreRunEnvironment = backStackEntry.toRoute()
             PreRunEnvironmentScreen(
                 planSessionId = route.planSessionId,
-                onContinue = { environment ->
+                onContinue = { environment, shoeId ->
                     navController.navigate(
                         Destination.ActiveRun(
                             planSessionId = route.planSessionId,
                             outdoor = environment == RunEnvironment.OUTDOOR,
+                            shoeId = shoeId,
                         ),
                     )
                 },

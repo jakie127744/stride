@@ -71,6 +71,7 @@ class ActiveRunViewModel @Inject constructor(
     private val route: Destination.ActiveRun = savedStateHandle.toRoute()
     private val planSessionId: Long? = route.planSessionId
     private val environment: RunEnvironment = if (route.outdoor) RunEnvironment.OUTDOOR else RunEnvironment.TREADMILL
+    private val shoeId: Long? = route.shoeId
 
     private val _state = MutableStateFlow(ActiveRunUiState(isOutdoor = route.outdoor))
     val state: StateFlow<ActiveRunUiState> = _state.asStateFlow()
@@ -224,6 +225,7 @@ class ActiveRunViewModel @Inject constructor(
                 tempCelsius = current.weather.snapshot?.temperatureCelsius,
                 humidityPercent = current.weather.snapshot?.humidityPercent,
                 weatherCondition = current.weather.snapshot?.condition?.name,
+                shoeId = shoeId,
             ),
         )
         planSessionId?.let { planRepository.markSessionCompleted(it) }

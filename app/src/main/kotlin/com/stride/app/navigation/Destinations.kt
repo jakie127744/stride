@@ -20,7 +20,7 @@ sealed interface Destination {
     data class PreRunEnvironment(val planSessionId: Long?) : Destination
 
     @Serializable
-    data class ActiveRun(val planSessionId: Long?, val outdoor: Boolean = true) : Destination
+    data class ActiveRun(val planSessionId: Long?, val outdoor: Boolean = true, val shoeId: Long? = null) : Destination
 
     @Serializable
     data class RunSummary(val runId: Long) : Destination
