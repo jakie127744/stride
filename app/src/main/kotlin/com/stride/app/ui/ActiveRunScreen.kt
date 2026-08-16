@@ -127,11 +127,14 @@ private fun WhiteOutlinedButton(onClick: () -> Unit, modifier: Modifier = Modifi
 @Composable
 private fun RunTabContent(state: ActiveRunUiState, viewModel: ActiveRunViewModel) {
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            "Step ${state.currentIndex + 1} of ${state.steps.size}",
-            style = MaterialTheme.typography.labelLarge,
-            color = Color.White,
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                "Step ${state.currentIndex + 1} of ${state.steps.size}",
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White,
+            )
+            IntervalStrip(steps = state.steps, currentIndex = state.currentIndex)
+        }
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -190,6 +193,27 @@ private fun RunTabContent(state: ActiveRunUiState, viewModel: ActiveRunViewModel
                     Text("Skip")
                 }
             }
+        }
+    }
+}
+
+/** One segment per step in the session — filled for completed/current, dim for upcoming.
+ * The piece from the original wireframes that the real screen was missing. */
+@Composable
+private fun IntervalStrip(steps: List<com.stride.core.database.entity.SessionStepEntity>, currentIndex: Int) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        steps.forEachIndexed { index, _ ->
+            val isCurrent = index == currentIndex
+            val isDone = index < currentIndex
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(if (isCurrent) 8.dp else 6.dp)
+                    .background(
+                        color = if (isDone || isCurrent) Color.White else Color.White.copy(alpha = .3f),
+                        shape = RoundedCornerShape(3.dp),
+                    ),
+            )
         }
     }
 }

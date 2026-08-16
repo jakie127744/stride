@@ -226,7 +226,13 @@ class RunSessionEngine @Inject constructor(
         locationJob?.cancel()
         val current = _state.value
         val steps = current.steps
+        // Full session length (stretches included) is what "Duration" honestly means to the
+        // runner. Pace, though, is a moving-pace figure — stretch hold-time would otherwise
+        // silently dilute it, making pace look slower than the runner actually moved.
         val totalDurationSeconds = steps.sumOf { it.durationSeconds ?: 0 }
+        val movingDurationSeconds = steps
+            .filter { it.stepType == StepType.WALK || it.stepType == StepType.RUN }
+            .sumOf { it.durationSeconds ?: 0 }
         val estimatedDistanceMeters = steps.sumOf { step ->
             (step.durationSeconds ?: 0) * (step.targetSpeedMetersPerSecond ?: 0.0)
         }
@@ -245,7 +251,7 @@ class RunSessionEngine @Inject constructor(
                 durationSeconds = totalDurationSeconds,
                 distanceMeters = distanceMeters,
                 avgPaceSecondsPerKm = distanceMeters.takeIf { it > 0 }
-                    ?.let { (totalDurationSeconds / (it / 1000.0)).toInt() },
+                    ?.let { (movingDurationSeconds / (it / 1000.0)).toInt() },
                 tempCelsius = current.weather.snapshot?.temperatureCelsius,
                 humidityPercent = current.weather.snapshot?.humidityPercent,
                 weatherCondition = current.weather.snapshot?.condition?.name,
