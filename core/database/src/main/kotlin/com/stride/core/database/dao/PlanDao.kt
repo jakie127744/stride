@@ -14,8 +14,15 @@ import java.time.LocalDate
 @Dao
 interface PlanDao {
 
-    @Query("SELECT * FROM plans WHERE isActive = 1 LIMIT 1")
+    // ORDER BY id DESC is a stopgap, not the real guarantee: it just makes "which active plan wins
+    // if there are somehow two" resolve to the newest one instead of whatever SQLite's insertion
+    // order happens to return. The actual invariant is enforced by PlanRepositoryImpl.createPlan
+    // deactivating every prior plan inside the same transaction as the insert.
+    @Query("SELECT * FROM plans WHERE isActive = 1 ORDER BY id DESC LIMIT 1")
     fun observeActivePlan(): Flow<PlanEntity?>
+
+    @Query("UPDATE plans SET isActive = 0 WHERE isActive = 1")
+    suspend fun deactivateAllPlans()
 
     @Insert
     suspend fun insertPlan(plan: PlanEntity): Long

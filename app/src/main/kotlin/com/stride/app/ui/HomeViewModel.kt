@@ -22,6 +22,10 @@ data class HomeUiState(
     val activePlan: PlanEntity? = null,
     val todaySession: PlanSessionEntity? = null,
     val completedRunCount: Int = 0,
+    /** Backs the dev-only "Run summary (demo)" preview link — null when no run has been
+     * recorded yet, since Room ids are 1-indexed and a hardcoded 0 would never match a real
+     * row (that link used to be permanently dead for exactly that reason). */
+    val latestRunId: Long? = null,
 )
 
 @HiltViewModel
@@ -44,6 +48,7 @@ class HomeViewModel @Inject constructor(
                     activePlan = plan,
                     todaySession = planSessions.firstOrNull { it.scheduledDate == LocalDate.now() },
                     completedRunCount = runs.size,
+                    latestRunId = runs.maxByOrNull { it.startedAt }?.id,
                 )
             }
         }

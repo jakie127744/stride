@@ -1,9 +1,9 @@
 package com.stride.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,7 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,16 +50,43 @@ private enum class RunTab { RUN, MAP, WEATHER }
 @Composable
 fun ActiveRunScreen(
     onFinished: (runId: Long) -> Unit,
+    onCancelled: () -> Unit,
     viewModel: ActiveRunViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val extendedColors = StrideThemeExtras.extendedColors
     var tab by remember { mutableStateOf(RunTab.RUN) }
+    var showEndConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.start() }
     LaunchedEffect(state.isFinished, state.finishedRunId) {
         val runId = state.finishedRunId
         if (state.isFinished && runId != null) onFinished(runId)
+    }
+    LaunchedEffect(state.isCancelled) {
+        if (state.isCancelled) onCancelled()
+    }
+
+    // Back — whether the system gesture/button or Android's predictive-back — abandons the run
+    // rather than silently leaving the engine (and its foreground service) running behind the
+    // next screen. Confirm first: this is a real "lose your progress" action, not a passive nav.
+    BackHandler { showEndConfirm = true }
+
+    if (showEndConfirm) {
+        AlertDialog(
+            onDismissRequest = { showEndConfirm = false },
+            title = { Text("End this run?") },
+            text = { Text("Your progress won't be saved.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showEndConfirm = false
+                    viewModel.cancelRun()
+                }) { Text("End run") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEndConfirm = false }) { Text("Keep going") }
+            },
+        )
     }
 
     // Stretch phases (warm-up/cool-down) read as calm, same as recovery — walk is also calm;
@@ -76,30 +105,44 @@ fun ActiveRunScreen(
         }
 
         Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-            // Only outdoor sessions have a track/weather to show — treadmill stays on Run.
-            if (state.isOutdoor) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                    RunTab.entries.forEach { candidate ->
-                        val label = when (candidate) {
-                            RunTab.RUN -> "Run"
-                            RunTab.MAP -> "Track"
-                            RunTab.WEATHER -> "Weather"
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+            ) {
+                // Only outdoor sessions have a track/weather to show — treadmill stays on Run.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (state.isOutdoor) {
+                        RunTab.entries.forEach { candidate ->
+                            val label = when (candidate) {
+                                RunTab.RUN -> "Run"
+                                RunTab.MAP -> "Track"
+                                RunTab.WEATHER -> "Weather"
+                            }
+                            val selected = tab == candidate
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (selected) Color.White else Color.White.copy(alpha = .55f),
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier
+                                    .clickable { tab = candidate }
+                                    .padding(vertical = 4.dp, horizontal = 2.dp),
+                            )
                         }
-                        val selected = tab == candidate
-                        Text(
-                            label,
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selected) Color.White else Color.White.copy(alpha = .55f),
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                            modifier = Modifier
-                                .clickable { tab = candidate }
-                                .padding(vertical = 4.dp, horizontal = 2.dp),
-                        )
                     }
                 }
+                // Discoverable even on gesture-nav devices where Back isn't an obvious affordance.
+                Text(
+                    "End run",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White.copy(alpha = .7f),
+                    modifier = Modifier
+                        .clickable { showEndConfirm = true }
+                        .padding(vertical = 4.dp, horizontal = 2.dp),
+                )
             }
 
-            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            Box(modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 8.dp)) {
                 when (tab) {
                     RunTab.RUN -> RunTabContent(state, viewModel)
                     RunTab.MAP -> MapTabContent(state)
@@ -235,11 +278,14 @@ private fun MapTabContent(state: ActiveRunUiState) {
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
-                TrackPolyline(state.trackPoints.map { it.latitude to it.longitude })
+                TrackMapView(
+                    points = state.trackPoints,
+                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)),
+                )
                 Text(
-                    "Raw GPS path — a real basemap (MapLibre + Protomaps) is Phase 5",
+                    "MapLibre demo tiles — self-hosted Protomaps is the production plan (docs/foundation.md)",
                     modifier = Modifier.align(Alignment.BottomStart).padding(10.dp),
-                    color = Color.White.copy(alpha = .5f),
+                    color = Color.White,
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 10.sp),
                 )
             }
@@ -252,27 +298,6 @@ private fun MapTabContent(state: ActiveRunUiState) {
                 Modifier.weight(1f),
             )
         }
-    }
-}
-
-@Composable
-private fun TrackPolyline(points: List<Pair<Double, Double>>) {
-    Canvas(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        val lats = points.map { it.first }
-        val lngs = points.map { it.second }
-        val latRange = (lats.max() - lats.min()).coerceAtLeast(0.00005)
-        val lngRange = (lngs.max() - lngs.min()).coerceAtLeast(0.00005)
-        val offsets = points.map { (lat, lng) ->
-            Offset(
-                x = ((lng - lngs.min()) / lngRange * size.width).toFloat(),
-                y = (size.height - (lat - lats.min()) / latRange * size.height).toFloat(),
-            )
-        }
-        for (i in 0 until offsets.size - 1) {
-            drawLine(Color.White, offsets[i], offsets[i + 1], strokeWidth = 5f)
-        }
-        drawCircle(Color.White, radius = 6f, center = offsets.first())
-        drawCircle(Color.Red, radius = 7f, center = offsets.last())
     }
 }
 

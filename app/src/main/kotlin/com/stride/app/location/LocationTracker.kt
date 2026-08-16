@@ -30,33 +30,45 @@ data class TrackPoint(
 )
 
 /**
+ * Interface boundary over GPS access — kept free of the Play Services/Android types so
+ * `RunSessionEngine` can be unit-tested against a fake instead of a real
+ * `FusedLocationProviderClient`. See [FusedLocationTracker] for the real implementation and
+ * [com.stride.app.di.AppModule] for the Hilt binding. Mirrors the same "don't block on missing
+ * architecture" call made for VoiceCueSpeaker.
+ */
+interface LocationTracker {
+    /** One-shot fix for weather lookups — null if permission isn't granted or no fix is available. */
+    suspend fun lastKnownLocation(): TrackPoint?
+
+    /** Continuous updates for the in-run map/elevation panel. Empty flow if permission is missing
+     * — the caller decides how to surface that (see ActiveRunViewModel). */
+    fun observeLocationUpdates(): Flow<TrackPoint>
+}
+
+/**
  * :app-local for now rather than a dedicated :core:location module — Phase 2's scaffold didn't
  * anticipate needing this ahead of Phase 5, and a full GPS/Health Connect module split can
- * happen when Phase 5 properly lands. Mirrors the same "don't block on missing architecture"
- * call made for VoiceCueSpeaker.
+ * happen when Phase 5 properly lands.
  */
 @Singleton
-class LocationTracker @Inject constructor(
+class FusedLocationTracker @Inject constructor(
     @ApplicationContext private val context: Context,
-) {
+) : LocationTracker {
     private val client: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
 
     private fun hasPermission(): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    /** One-shot fix for weather lookups — null if permission isn't granted or no fix is available. */
     @SuppressLint("MissingPermission")
-    suspend fun lastKnownLocation(): TrackPoint? {
+    override suspend fun lastKnownLocation(): TrackPoint? {
         if (!hasPermission()) return null
         val location = runCatching { client.lastLocation.await() }.getOrNull() ?: return null
         return TrackPoint(location.latitude, location.longitude, location.altitude, location.time)
     }
 
-    /** Continuous updates for the in-run map/elevation panel. Empty flow if permission is missing
-     * — the caller decides how to surface that (see ActiveRunViewModel). */
     @SuppressLint("MissingPermission")
-    fun observeLocationUpdates(): Flow<TrackPoint> = callbackFlow {
+    override fun observeLocationUpdates(): Flow<TrackPoint> = callbackFlow {
         if (!hasPermission()) {
             close()
             return@callbackFlow

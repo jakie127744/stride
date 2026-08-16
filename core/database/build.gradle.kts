@@ -11,6 +11,7 @@ android {
 
     defaultConfig {
         minSdk = 26
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -25,6 +26,14 @@ android {
     // against real prior-version schemas once the app has shipped its first release.
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
+    }
+
+    // MigrationTestHelper reads the exported schema JSON as a test asset, not off the
+    // filesystem path directly — this is what makes them visible to the instrumented test.
+    sourceSets {
+        getByName("androidTest") {
+            assets.srcDirs("$projectDir/schemas")
+        }
     }
 }
 
@@ -42,4 +51,12 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+
+    // MigrationTestHelper needs a real SQLite/Android runtime, not a plain JVM unit test — see
+    // src/androidTest/.../MigrationTest.kt. Runs against the schema JSON files checked into
+    // schemas/, so MIGRATION_1_2 is verified against the real v1 -> v2 shape, not just re-reading
+    // its own SQL back.
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.room.testing)
 }

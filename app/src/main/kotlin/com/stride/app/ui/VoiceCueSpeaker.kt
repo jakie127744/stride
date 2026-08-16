@@ -8,6 +8,18 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
+ * Interface boundary over the voice-cue engine — kept small and Android-framework-free so
+ * `RunSessionEngine` (the highest-risk file in the app: state machine + concurrency + Room
+ * writes) can be exercised in a plain JVM unit test against a fake, instead of needing a real
+ * `TextToSpeech` engine and Android context. See [AndroidVoiceCueSpeaker] for the real
+ * implementation and [com.stride.app.di.AppModule] for the Hilt binding.
+ */
+interface VoiceCueSpeaker {
+    fun speak(text: String)
+    fun shutdown()
+}
+
+/**
  * A minimal, real voice-cue engine ahead of the full Media3 audio engine (Phase 4). Deliberately
  * NOT the final architecture — see docs/foundation.md "Smart Audio Engine": that calls for a
  * foreground `MediaSessionService` + `ExoPlayer` so cues keep firing while the app is
@@ -19,9 +31,9 @@ import javax.inject.Singleton
  * interim version. Once Phase 4 lands, this class goes away in favor of the real engine.
  */
 @Singleton
-class VoiceCueSpeaker @Inject constructor(
+class AndroidVoiceCueSpeaker @Inject constructor(
     @ApplicationContext context: Context,
-) {
+) : VoiceCueSpeaker {
     @Volatile private var isReady = false
 
     private val tts: TextToSpeech = TextToSpeech(context) { status ->
@@ -35,12 +47,12 @@ class VoiceCueSpeaker @Inject constructor(
         )
     }
 
-    fun speak(text: String) {
+    override fun speak(text: String) {
         if (!isReady) return
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "stride_cue")
     }
 
-    fun shutdown() {
+    override fun shutdown() {
         tts.stop()
         tts.shutdown()
     }

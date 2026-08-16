@@ -31,3 +31,9 @@ val DefaultStretchRoutine: List<StretchExercise> = listOf(
 
 fun stretchRoutineFor(phase: StretchPhase): List<StretchExercise> =
     DefaultStretchRoutine.filter { it.phase == phase }
+
+/** Looks a stretch back up by its display name — used where only a [SessionStepEntity]'s
+ * `label` survived the round trip through Room (e.g. cue generation in `RunSessionEngine`),
+ * to recover [StretchExercise.perSide] without needing a dedicated database column for it. */
+fun findStretchExercise(name: String): StretchExercise? =
+    DefaultStretchRoutine.firstOrNull { it.name == name }

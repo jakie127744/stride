@@ -66,10 +66,10 @@ fun StrideNavHost(
                 },
                 onOpenHistory = { navController.navigate(Destination.History) },
                 onOpenInsights = { navController.navigate(Destination.Insights) },
-                onPreviewDestination = { route ->
+                onPreviewDestination = { route, runId ->
                     val destination: Destination? = when (route) {
                         "run" -> Destination.ActiveRun(planSessionId = null)
-                        "summary" -> Destination.RunSummary(runId = 0)
+                        "summary" -> runId?.let { Destination.RunSummary(runId = it) }
                         "livetrack" -> Destination.LiveTrack
                         else -> null
                     }
@@ -106,6 +106,11 @@ fun StrideNavHost(
                 onFinished = { runId ->
                     navController.navigate(Destination.RunSummary(runId)) {
                         popUpTo<Destination.Home>()
+                    }
+                },
+                onCancelled = {
+                    navController.navigate(Destination.Home) {
+                        popUpTo<Destination.Home> { inclusive = true }
                     }
                 },
             )

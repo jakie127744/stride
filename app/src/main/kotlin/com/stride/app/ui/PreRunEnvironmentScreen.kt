@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -144,19 +145,19 @@ private fun WeatherCard(state: WeatherUiState) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
+            .heightIn(min = 140.dp)
             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp)),
     ) {
         state.snapshot?.let { snapshot ->
             WeatherAnimation(
                 condition = snapshot.condition,
                 isDay = snapshot.isDay,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.matchParentSize(),
             )
         }
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             when {
                 state.isLoading -> Text("Checking conditions…", style = MaterialTheme.typography.bodyMedium)

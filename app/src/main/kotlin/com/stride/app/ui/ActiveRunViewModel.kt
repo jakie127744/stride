@@ -39,4 +39,11 @@ class ActiveRunViewModel @Inject constructor(
 
     fun togglePause() = engine.togglePause()
     fun skipStep() = engine.skipStep()
+
+    /** Abandon the session early — stops the foreground service and the engine's jobs together,
+     * so backing out mid-run doesn't leave GPS/notification running in the background forever. */
+    fun cancelRun() {
+        engine.cancel()
+        RunSessionService.stop(context)
+    }
 }

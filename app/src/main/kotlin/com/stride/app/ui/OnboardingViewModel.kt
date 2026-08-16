@@ -74,7 +74,11 @@ class OnboardingViewModel @Inject constructor(
         planSessionId = 0,
         orderIndex = 0,
         stepType = StepType.STRETCH,
-        durationSeconds = holdSeconds,
+        // perSide stretches (leg swings, calf/quad/hamstring) get held once per side — the
+        // countdown the runner actually watches needs to cover both, not just the first.
+        // RunSessionEngine.cueFor() reconstructs the per-side hold time from this same
+        // StretchExercise catalog for the "hold for X… and switch sides" cue.
+        durationSeconds = if (perSide) holdSeconds * 2 else holdSeconds,
         label = name,
     )
 

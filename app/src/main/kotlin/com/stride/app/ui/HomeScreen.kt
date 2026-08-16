@@ -38,7 +38,7 @@ fun HomeScreen(
     onStartSession: (planSessionId: Long) -> Unit,
     onOpenHistory: () -> Unit,
     onOpenInsights: () -> Unit,
-    onPreviewDestination: (String) -> Unit,
+    onPreviewDestination: (route: String, runId: Long?) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -116,18 +116,21 @@ fun HomeScreen(
             Button(onClick = onOpenInsights, modifier = Modifier.fillMaxWidth()) { Text("Insights") }
         }
 
-        // TEMPORARY, dev-only: History/Insights/Live Track are still placeholders reachable
-        // above, but Active Run and Run Summary need a real session to open normally — this
-        // lets them be previewed with demo data. Delete once they have other real entry points.
+        // TEMPORARY, dev-only: Active Run and Run Summary need a real session/run to open
+        // normally — this lets them be previewed without one. History/Insights have their own
+        // real buttons above now; Live Track only needs a location, so it's previewable too.
+        // Delete once Active Run/Run Summary have other real entry points of their own.
         Text(
             "Preview other screens (dev only)",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            listOf(
+            listOfNotNull(
                 "Active run (demo)" to "run",
-                "Run summary (demo)" to "summary",
+                // No run recorded yet -> no id to preview a summary for; skip rather than link
+                // to a run that will never exist (Room ids are 1-indexed, never 0).
+                uiState.latestRunId?.let { "Run summary (latest)" to "summary" },
                 "Live Track" to "livetrack",
             ).forEach { (label, route) ->
                 Text(
@@ -136,7 +139,7 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onPreviewDestination(route) }
+                        .clickable { onPreviewDestination(route, uiState.latestRunId) }
                         .padding(vertical = 6.dp),
                 )
             }

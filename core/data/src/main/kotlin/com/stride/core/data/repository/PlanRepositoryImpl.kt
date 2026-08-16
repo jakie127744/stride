@@ -26,7 +26,11 @@ class PlanRepositoryImpl @Inject constructor(
 
     override suspend fun createPlan(plan: PlanEntity, sessions: List<PlanSessionEntity>): Long =
         database.withTransaction {
-            val planId = planDao.insertPlan(plan)
+            // A new plan is always the runner's one active plan — re-running onboarding (or any
+            // future re-onboarding flow) must not leave two rows with isActive=1, or Home can get
+            // permanently stuck showing whichever one SQLite happens to return first.
+            planDao.deactivateAllPlans()
+            val planId = planDao.insertPlan(plan.copy(isActive = true))
             if (sessions.isNotEmpty()) {
                 planDao.insertSessions(sessions.map { it.copy(planId = planId) })
             }

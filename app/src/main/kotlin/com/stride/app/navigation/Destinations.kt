@@ -5,9 +5,10 @@ import kotlinx.serialization.Serializable
 /**
  * Type-safe Navigation Compose routes (2.8+). One object per screen from the wireframes —
  * see the Stride Wireframes artifact for what each of these actually looks like. Onboarding,
- * PreRunEnvironment, ActiveRun, and RunSummary are real (a minimal but functional vertical
- * slice, ahead of their full Phase 4/5/6 scope); History, Insights, and LiveTrack are still
- * placeholders, reachable via Home's dev-only preview links until their phase lands.
+ * PreRunEnvironment, ActiveRun, RunSummary, History, Insights, and LiveTrack are all real now
+ * (see docs/roadmap.md's "pulled forward" vertical slice) — ahead of their full Phase 4/5/6
+ * scope, but reading and writing actual Room data, not placeholders. Only ActiveRun/RunSummary
+ * still lean on Home's dev-only preview links for a way in without a real scheduled session.
  */
 sealed interface Destination {
     @Serializable
