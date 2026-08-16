@@ -5,14 +5,24 @@
 
 [versions]
 agp = "8.13.2"
-kotlin = "2.0.21"
-ksp = "2.0.21-1.0.28"
+# Bumped from 2.0.21: org.maplibre.gl:android-sdk:13.5.0 (see app/build.gradle.kts) ships
+# metadata compiled with Kotlin 2.2, which a 2.0.21 compiler can't read at all — not a style
+# choice, a hard compile failure (kspDebugKotlin: "binary version is 2.2.0, expected 2.0.0").
+# 2.2.10 is the resolved kotlin-stdlib version already winning via conflict resolution on
+# :app's classpath (see MapLibre's own transitive requirement), so this just makes the
+# compiler's declared version match what Gradle was already resolving at runtime.
+kotlin = "2.2.10"
+ksp = "2.2.10-2.0.2"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 composeBom = "2024.12.01"
 navigationCompose = "2.8.4"
 navigation3 = "1.0.0-alpha01"
-hilt = "2.52"
+# Bumped from 2.52: that version predates official support for the KSP2 out-of-process
+# worker that ships with the ksp version above, and failed Hilt's own KSP step with
+# "Expected @AndroidEntryPoint to have a value" — a known version-skew symptom, not a real
+# missing annotation value.
+hilt = "2.56.2"
 hiltNavigationCompose = "1.2.0"
 room = "2.7.0-alpha11"
 media3 = "1.5.0"

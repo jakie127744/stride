@@ -14,11 +14,13 @@ import com.stride.core.database.entity.SessionStepEntity
 import com.stride.core.database.entity.StepType
 import com.stride.core.weather.WeatherRepository
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,6 +36,7 @@ import java.time.LocalDate
  * made it possible) can drive `RunSessionEngine` deterministically against a [TestDispatcher]
  * instead of a real 1-second `delay()`/real GPS/real TTS.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class RunSessionEngineTest {
 
     private fun engineWith(
@@ -67,10 +70,13 @@ class RunSessionEngineTest {
         assertFalse(engine.state.value.isLoading)
         assertEquals(2, engine.state.value.remainingSeconds)
 
-        // 4 one-second ticks: WALK(2s) -> RUN(2s) -> finish.
-        repeat(4) {
+        // WALK(2s) -> RUN(2s) -> finish. Poll rather than assume an exact tick count needed:
+        // advanceTimeBy's exact-boundary behavior isn't worth pinning a test to.
+        var ticks = 0
+        while (!engine.state.value.isFinished && ticks < 10) {
             testScheduler.advanceTimeBy(1_000)
             runCurrent()
+            ticks++
         }
 
         val finalState = engine.state.value

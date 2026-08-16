@@ -273,6 +273,14 @@ class RunSessionEngine @Inject constructor(
                     maybeSpeakSwitchSidesCue(current, newRemaining)
                 } else {
                     advanceStep(planSessionId, outdoor, shoeId)
+                    // finish() runs on this same coroutine (this loop calls advanceStep calls
+                    // finish, all inline) — breaking out cleanly here, rather than finish()
+                    // self-cancelling tickJob, is what makes finish() actually reach its Room
+                    // write. Self-cancellation mid-finish() would throw CancellationException at
+                    // finish()'s own next suspension point (recordRun/markSessionCompleted),
+                    // silently aborting the save before isFinished ever gets set — a real bug a
+                    // unit test caught: 4/4 finish() calls failed to persist under that pattern.
+                    if (_state.value.isFinished) break
                 }
             }
         }
@@ -303,7 +311,11 @@ class RunSessionEngine @Inject constructor(
     }
 
     private suspend fun finish(planSessionId: Long?, outdoor: Boolean, shoeId: Long?) {
-        tickJob?.cancel()
+        // Not cancelling tickJob here: finish() can run *on* that same coroutine (called via the
+        // tick loop -> advanceStep -> finish chain), and self-cancelling mid-function would throw
+        // CancellationException at the next suspend call below, aborting the Room write before
+        // isFinished is ever set. The tick loop's own isFinished guard (resumeTicking) is what
+        // actually stops it — see the comment there.
         locationJob?.cancel()
         val current = _state.value
         val steps = current.steps
