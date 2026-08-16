@@ -42,6 +42,11 @@ interface PlanDao {
     @Update
     suspend fun updateSession(session: PlanSessionEntity)
 
+    /** Batch counterpart for AdaptiveScheduler's reconciliation — every session it moves gets
+     * written back together, not one-at-a-time. */
+    @Update
+    suspend fun updateSessions(sessions: List<PlanSessionEntity>)
+
     @Query("UPDATE plan_sessions SET status = :status WHERE id = :planSessionId")
     suspend fun updateSessionStatus(planSessionId: Long, status: PlanSessionStatus)
 

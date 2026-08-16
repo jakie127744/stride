@@ -1,5 +1,6 @@
 package com.stride.core.data.repository
 
+import com.stride.core.data.scheduler.AdaptiveScheduler
 import com.stride.core.database.entity.PlanEntity
 import com.stride.core.database.entity.PlanSessionEntity
 import com.stride.core.database.entity.SessionStepEntity
@@ -16,8 +17,13 @@ interface PlanRepository {
     fun observeStepsForSession(planSessionId: Long): Flow<List<SessionStepEntity>>
     suspend fun setStepsForSession(planSessionId: Long, steps: List<SessionStepEntity>)
 
-    // TODO(Phase 6): reconcileMissedSessions(planId) — implements the compress → shift →
-    // regress-and-repeat scheduler from docs/foundation.md "Adaptive Scheduling". Left
-    // unimplemented deliberately rather than half-built: the DAO surface it needs
-    // (PlanDao.getSessionsBefore) already exists so Phase 6 isn't blocked on schema changes.
+    /**
+     * Compress → shift → regress-and-repeat, per docs/foundation.md "Adaptive Scheduling" — see
+     * [AdaptiveScheduler] for the actual decision logic (pure, unit-tested independently of this
+     * repository). Returns null if there was nothing to reconcile (no missed sessions), otherwise
+     * which strategy was applied, so the caller can tell the runner what happened instead of
+     * silently moving their plan around — "the runner is never shown a failed plan, only a
+     * recalculated one" only holds if they're actually told it was recalculated.
+     */
+    suspend fun reconcileMissedSessions(planId: Long): AdaptiveScheduler.Strategy?
 }

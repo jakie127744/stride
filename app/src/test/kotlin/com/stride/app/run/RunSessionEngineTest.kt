@@ -7,6 +7,7 @@ import com.stride.core.common.DispatcherProvider
 import com.stride.core.common.WeatherSnapshot
 import com.stride.core.data.repository.PlanRepository
 import com.stride.core.data.repository.RunRepository
+import com.stride.core.data.scheduler.AdaptiveScheduler
 import com.stride.core.database.entity.PlanEntity
 import com.stride.core.database.entity.PlanSessionEntity
 import com.stride.core.database.entity.RunSessionEntity
@@ -207,6 +208,7 @@ private class FakePlanRepository(
     }
     override fun observeStepsForSession(planSessionId: Long): Flow<List<SessionStepEntity>> = flowOf(steps)
     override suspend fun setStepsForSession(planSessionId: Long, steps: List<SessionStepEntity>) {}
+    override suspend fun reconcileMissedSessions(planId: Long): AdaptiveScheduler.Strategy? = null
 }
 
 private class FakeRunRepository : RunRepository {

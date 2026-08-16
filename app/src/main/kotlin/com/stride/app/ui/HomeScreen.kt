@@ -42,6 +42,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val rescheduleMessage by viewModel.rescheduleMessage.collectAsStateWithLifecycle()
     val extendedColors = StrideThemeExtras.extendedColors
 
     val hasSessionToday = uiState.todaySession != null
@@ -63,6 +64,26 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text("Stride", style = MaterialTheme.typography.headlineMedium)
+
+        // "The runner is never shown a failed plan, only a recalculated one" (adaptive
+        // scheduling, docs/foundation.md) — this is the "told about it" half of that promise.
+        rescheduleMessage?.let { message ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(extendedColors.recovery, RoundedCornerShape(14.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(message, style = MaterialTheme.typography.bodyMedium, color = extendedColors.onRecovery)
+                Text(
+                    "Got it",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = extendedColors.onRecovery,
+                    modifier = Modifier.clickable { viewModel.dismissRescheduleMessage() },
+                )
+            }
+        }
 
         when {
             uiState.isLoading -> Text("Loading…", style = MaterialTheme.typography.bodyMedium)
