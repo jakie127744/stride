@@ -13,9 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.stride.app.ui.ActiveRunScreen
-import com.stride.app.ui.HistoryPlaceholderScreen
+import com.stride.app.ui.HistoryScreen
 import com.stride.app.ui.HomeScreen
-import com.stride.app.ui.InsightsPlaceholderScreen
+import com.stride.app.ui.InsightsScreen
 import com.stride.app.ui.LiveTrackPlaceholderScreen
 import com.stride.app.ui.OnboardingScreen
 import com.stride.app.ui.PreRunEnvironmentScreen
@@ -118,8 +118,8 @@ fun StrideNavHost(
                 },
             )
         }
-        composable<Destination.History> { HistoryPlaceholderScreen() }
-        composable<Destination.Insights> { InsightsPlaceholderScreen() }
+        composable<Destination.History> { HistoryScreen() }
+        composable<Destination.Insights> { InsightsScreen() }
         composable<Destination.LiveTrack> { LiveTrackPlaceholderScreen() }
     }
 }

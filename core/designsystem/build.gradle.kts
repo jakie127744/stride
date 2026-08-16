@@ -25,6 +25,8 @@ android {
 }
 
 dependencies {
+    api(project(":core:common")) // WeatherCondition appears in WeatherAnimation's public surface
+
     implementation(libs.androidx.core.ktx)
 
     api(platform(libs.androidx.compose.bom)) // api: every module using StrideTheme needs the BOM's version alignment too

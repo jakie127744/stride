@@ -59,8 +59,4 @@ fun PlaceholderScreen(title: String, subtitle: String) {
     }
 }
 
-@Composable fun HistoryPlaceholderScreen() = PlaceholderScreen("History", "Run history + shoe log — Phase 6")
-
-@Composable fun InsightsPlaceholderScreen() = PlaceholderScreen("Insights", "Performance statistics — Phase 6")
-
 @Composable fun LiveTrackPlaceholderScreen() = PlaceholderScreen("Live Track", "Safety sharing — Phase 5")
