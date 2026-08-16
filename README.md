@@ -9,7 +9,7 @@ Build sequence and current status: [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Status
 
-🚧 Pre-alpha. Core architecture is in place (Room + repositories + Hilt DI + navigation + M3 theme) — feature screens are still placeholders as their phases land (see roadmap). The Gradle wrapper jar isn't committed yet; see "Building" below.
+🚧 Pre-alpha. Core architecture is in place (Room + repositories + Hilt DI + navigation + M3 theme) — feature screens are still placeholders as their phases land (see roadmap). Not yet build-verified: developed without an Android SDK available, so the first real check is opening it in Android Studio.
 
 ## Module structure
 
@@ -36,7 +36,7 @@ feature/
 
 ## Building
 
-Requires JDK 17 and Android Studio (Ladybug or newer). The Gradle wrapper jar isn't committed yet — on first open, Android Studio will offer to regenerate it, or run `gradle wrapper --gradle-version 8.10` once Gradle is available locally.
+Requires Android Studio (Ladybug or newer) — needed for the Android SDK, not just the IDE. Open the project and let Android Studio's SDK Manager prompt run once; after that:
 
 ```bash
 ./gradlew assembleDebug
