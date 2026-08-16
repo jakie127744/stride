@@ -26,6 +26,7 @@ include(":core:database")       // Room: runs, plans, sessions, shoe profiles, c
 include(":core:data")           // repositories, single source of truth over :core:database + :core:health
 include(":core:health")         // Health Connect read/write wrapper
 include(":core:weather")        // Open-Meteo client — outdoor session conditions for coaching + stats
+include(":core:maps")           // MapLibre + Protomaps PMTiles — offline-first route basemap, no API key
 
 // :feature:* — one module per user-facing flow, depends on :core:* only, never on another :feature:*
 include(":feature:onboarding")

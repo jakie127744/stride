@@ -29,6 +29,8 @@ Most running apps pick a side. Couch-to-5K apps are warm and encouraging but sto
 | Health data | Health Connect (single read/write layer), Wear OS as a Phase 2+ companion | Runs show up correctly across the whole health-app ecosystem, not siloed |
 | Color | Warm (orange/red) = action/effort, cool (teal) = recovery, cross-fades live during a run | Passive heads-up display via color, independent of reading text |
 | Type | Condensed display face for live numerals, tabular figures mandatory | Digits must not jitter width while updating mid-run |
+| Location | Android Fused Location Provider for GPS pace/distance | Standard, battery-aware, already required for Live Track and outdoor weather |
+| Maps | MapLibre (open-source renderer) + Protomaps PMTiles (open OSM data as a static, downloadable file) | No API key, no tile-server bill, no rate limit — `tile.openstreetmap.org` explicitly forbids embedded-app use in its [tile usage policy](https://operations.osmfoundation.org/policies/tiles/), so it isn't a real option for a shipped app; PMTiles sidesteps the problem by not needing a live server at all |
 
 ## Feature specifications
 
@@ -45,6 +47,14 @@ On a missed session, in order of preference: **compress** (shift remaining sessi
 ### Hardware tracking
 - **Shoe mileage:** multiple shoe profiles, auto-accumulated distance, configurable retirement threshold (default 500km/~300mi) with a proactive nudge.
 - **Live Track:** one-tap, time-limited location-share link, auto-expiring, reduced-frequency polling independent of run-GPS, optional inactivity alert.
+
+### Route mapping (offline-first, no API key)
+Outdoor sessions trace the runner's GPS path over a real basemap without depending on a live tile server:
+
+- **Renderer:** MapLibre Android SDK — an open-source, unauthenticated fork of the old Mapbox GL renderer. No key required to draw a map, only to choose what tiles you feed it.
+- **Tile data:** Protomaps PMTiles — OpenStreetMap data pre-baked into a single static file, readable over plain HTTP range-requests. No tile server to run, no per-request auth or billing, and no exposure to `tile.openstreetmap.org`'s usage policy (which bars exactly this kind of embedded-app traffic).
+- **"Download based on where you're running":** the first time GPS reports a location outside the currently cached region, the app fetches a PMTiles extract for that local area (city/county-sized, a few MB) and caches it on-device — prompted on Wi-Fi by default, with a manual "download this area" option for travel. Once cached, the basemap renders fully offline; only the GPS fix itself needs no network at all.
+- **The runner's actual path** is drawn as a polyline from the app's own location samples, independent of the basemap — the map underneath can be missing or stale (e.g. mid-download) and the route trace still renders correctly.
 
 ### Environment: outdoor vs. treadmill, and weather adaptation
 Every session starts with one question the app asks, not assumes: **"Running outside or on a treadmill today?"** — defaulted to the runner's last choice, one tap to change.

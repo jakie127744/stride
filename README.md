@@ -20,6 +20,7 @@ core/
   data/                  repositories — single source of truth over database + health + weather
   health/                Health Connect read/write wrapper
   weather/               Open-Meteo client — conditions for outdoor sessions
+  maps/                  MapLibre + Protomaps PMTiles — offline-first route basemap, no API key
 feature/
   onboarding/            track selection, first-run flow
   plan/                  beginner + pro plan builder, adaptive scheduler
