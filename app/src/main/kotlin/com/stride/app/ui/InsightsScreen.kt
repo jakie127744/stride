@@ -32,8 +32,8 @@ fun InsightsScreen(viewModel: InsightsViewModel = hiltViewModel()) {
         } else if (uiState.totalRuns == 0) {
             Text(
                 "No runs logged yet — complete a session and these numbers become real. " +
-                    "The weather-normalized pace trend chart from the wireframes needs several " +
-                    "weeks of outdoor runs to mean anything, so it lands with Phase 5.",
+                    "The full pace trend chart from the wireframes still needs several weeks " +
+                    "of outdoor runs to mean anything.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -47,11 +47,42 @@ fun InsightsScreen(viewModel: InsightsViewModel = hiltViewModel()) {
                 StatTile("Longest run", "%.2f km".format(uiState.longestRunKm), Modifier.weight(1f))
             }
             uiState.bestPaceSecondsPerKm?.let {
-                StatTile("Best pace", "${it / 60}:${(it % 60).toString().padStart(2, '0')} /km", Modifier.fillMaxWidth())
+                StatTile("Best pace", formatPace(it), Modifier.fillMaxWidth())
+            }
+
+            Text("Personal bests", style = MaterialTheme.typography.titleMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StatTile("Longest streak", "${uiState.longestStreakDays} days", Modifier.weight(1f))
+                StatTile(
+                    "Best 5K effort",
+                    uiState.best5kEffortPaceSecondsPerKm?.let { formatPace(it) } ?: "—",
+                    Modifier.weight(1f),
+                )
+            }
+
+            uiState.latestWeekTrend?.let { trend ->
+                Text("This week's pace", style = MaterialTheme.typography.titleMedium)
+                if (trend.rawAvgPaceSecondsPerKm == trend.normalizedAvgPaceSecondsPerKm) {
+                    StatTile("Average pace", formatPace(trend.rawAvgPaceSecondsPerKm), Modifier.fillMaxWidth())
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        StatTile("Raw average", formatPace(trend.rawAvgPaceSecondsPerKm), Modifier.weight(1f))
+                        StatTile("Weather-normalized", formatPace(trend.normalizedAvgPaceSecondsPerKm), Modifier.weight(1f))
+                    }
+                    Text(
+                        "A hot run this week reads slower than it really was — the normalized " +
+                            "figure adjusts for that so a hot week doesn't look like lost fitness.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
 }
+
+private fun formatPace(secondsPerKm: Int): String =
+    "${secondsPerKm / 60}:${(secondsPerKm % 60).toString().padStart(2, '0')} /km"
 
 @Composable
 private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {

@@ -40,8 +40,16 @@ Status as of 16 Aug 2026. See [`docs/foundation.md`](foundation.md) for the reas
   - [ ] A real persistent/auto-updating Live Track link (needs backend infra — the client-only snapshot-share version already works).
   - [ ] MapLibre + Protomaps PMTiles route mapping with on-demand regional download/caching to replace the raw Canvas polyline — `core:maps`' `PmtilesRepository`/`PmtilesCache` (download-and-cache half) landed 16 Aug 2026, but the actual on-device PMTiles-format reader + local tile server MapLibre needs to render from a cached file is still real remaining work (MapLibre Android has no built-in PMTiles support — confirmed by inspecting the SDK jar).
 
-- [ ] **Phase 6 — Custom Workouts, Adaptive Scheduling & Performance Insights**
-  Interval/tempo builder, negative-split pacing calculator, adaptive scheduler (compress/shift/regress), shoe mileage tracking tied to run completion, `:feature:insights` dashboard (weather-normalized pace trend, training load/consistency, HR zone distribution, VO2 max trend, personal bests).
+- [~] **Phase 6 — Custom Workouts, Adaptive Scheduling & Performance Insights** (adaptive scheduler + partial insights landed 16 Aug 2026)
+  - [x] **Adaptive scheduler** (compress/shift/regress) — see the Phase 5 entry above; `AdaptiveScheduler` + `PlanRepository.reconcileMissedSessions`, wired into Home with a dismissible "here's what changed" banner.
+  - [x] **Personal bests** — longest-ever streak, best 5K-effort pace (an honest average-pace proxy over ~4.5km+ runs, not real split analysis — Stride doesn't persist GPS track points past a run ending, so genuine "fastest 1K within a longer run" isn't possible without a schema change this pass didn't make).
+  - [x] **Weather-normalized pace trend** — the most recent week's raw vs. heat-adjusted average pace, shown side by side with an explanation when they differ. Uses the same hot-weather adjustment factor as `RunSessionEngine`'s live pace easing, so the two stay consistent with each other.
+  - [x] Shoe mileage tracking tied to run completion — already real since the original vertical slice (`RunRepositoryImpl.recordRun`); this roadmap line was stale, not an open item.
+  - [ ] Interval/tempo builder — Pro track still runs one hardcoded placeholder shape (`OnboardingViewModel.mainSteps`); no builder UI exists.
+  - [ ] Negative-split pacing calculator.
+  - [ ] Training load/consistency dashboard (planned-vs-completed sessions, rolling weekly-volume chart, adaptive-scheduler history made visible) — weekly volume itself already exists, the rest doesn't.
+  - [ ] HR zone distribution — average HR per run now exists (Phase 5's Health Connect read), but nothing computes zones from it yet.
+  - [ ] VO2 max trend — Health Connect's read side doesn't fetch `Vo2MaxRecord` yet, only heart rate.
 
 - [ ] **Phase 7 — Polish & Animations**
   M3 Expressive motion pass tuned against real run data, deliberate micro-interactions on in-run controls, Baseline Profiles + macrobenchmarks, full accessibility/reduced-motion audit. Optional enhancement: ML Kit Pose Detection-assisted stretch form feedback (front camera, opt-in, pre/post-run only — see docs/foundation.md for what this can and can't actually verify).
