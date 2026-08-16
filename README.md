@@ -9,7 +9,7 @@ Build sequence and current status: [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Status
 
-🚧 Pre-alpha. Project scaffold only — no feature code yet (see roadmap).
+🚧 Pre-alpha. Core architecture is in place (Room + repositories + Hilt DI + navigation + M3 theme) — feature screens are still placeholders as their phases land (see roadmap). The Gradle wrapper jar isn't committed yet; see "Building" below.
 
 ## Module structure
 

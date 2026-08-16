@@ -1,7 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -20,10 +21,25 @@ android {
         jvmTarget = "17"
     }
 
+    // Room schema exports — checked into version control so migrations can be tested
+    // against real prior-version schemas once the app has shipped its first release.
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
 }
 
 dependencies {
-    // Phase 2 scaffold — module is empty; real dependencies land with its Phase 3/4/5 implementation.
+    api(project(":core:common")) // Track/RunEnvironment appear in entity + DAO signatures
+
     implementation(libs.androidx.core.ktx)
+    // api, not implementation: StrideDatabase's public surface (RoomDatabase, withTransaction)
+    // is exactly what :core:data needs on its own compile classpath to build the repository layer.
+    api(libs.room.runtime)
+    api(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+
     testImplementation(libs.junit)
 }

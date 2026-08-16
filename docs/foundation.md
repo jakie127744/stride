@@ -41,6 +41,25 @@ Most running apps pick a side. Couch-to-5K apps are warm and encouraging but sto
 ### Smart Audio Engine
 Foreground `MediaSessionService` running for the run's duration. Cues fire off distance/time/HR-zone triggers, request transient duck focus, play a 2–4s clip, release focus. Offline-capable via bundled voice pack + TTS fallback.
 
+**Music sources — three tiers, not one:**
+- **Local files (in-app player):** Stride's own `ExoPlayer` instance plays MP3s (and other formats ExoPlayer supports) picked from the device via the system file/media picker — full control, since it's Stride's own player session ducking itself for cues, no external app involved.
+- **Spotify (real integration):** the [Spotify App Remote SDK](https://developer.spotify.com/documentation/android/) lets Stride browse/control a signed-in user's Spotify playback directly, if they have the Spotify app installed. This is genuinely available and free, though production-scale API quota requires Spotify's app review. Ducking still applies the same way during cues.
+- **Amazon Music and everything else:** no public SDK exists for third-party apps to browse or control Amazon Music playback — unlike Spotify, there's no "App Remote" equivalent to integrate against. Stride can't offer the same in-app control there. What it *can* do, for Amazon Music or any other player, is what the ducking spec above already covers: the runner starts their own music app separately, and Stride requests transient duck focus so its cues speak over it. That's a real, working fallback — just not a picker/control surface inside Stride.
+
+### Session pacing (walk/run breakdown and pace targets)
+No session starts with a blank pace field. Before a session begins, the app states the plan for that specific session — not just "run for 28 minutes":
+
+- **Beginner (walk/run intervals):** a named preset drives the breakdown — e.g. "4:00 walk at 3.0mph, then 1:00 run at 5.0mph, repeated" — shown plainly before the runner taps start, not discovered mid-run. The default preset is recommended from the runner's current plan week and recent RPE trend (a string of "felt hard" sessions holds at the current preset rather than advancing, same logic as the adaptive scheduler's regress-and-repeat), and is always editable before starting.
+- **Pro (tempo/intervals):** the existing custom interval builder (rep count, work/rest, target pace or HR zone) *is* this same concept at higher precision — no separate system needed.
+- **Session length:** asked explicitly up front — "how long do you want to train today?" — for freeform sessions, or shown/editable against the plan's target for a scheduled one. The chosen length and preset together determine how many walk/run reps actually fit, rather than the runner guessing.
+- All speeds are stored as one canonical unit (m/s) and converted to mph/pace-per-km/pace-per-mile only at display time, so unit bugs can't creep in between GPS, storage, and the UI.
+
+### Warm-up, cool-down, and stretching
+Every session — Beginner or Pro — opens and closes with a guided stretch routine, voice-led through the same audio engine as interval cues (dynamic stretches pre-run: leg swings, walking lunges; static stretches post-run: calf, quad, hamstring), not just a generic "warm up first" reminder.
+
+- **v1 (reliable):** a guided hold-timer per stretch, cued by voice ("hold for 20 seconds… and switch sides"), with a short library of named stretches the runner can swap between. This is honest compliance, not sensed compliance — it guides and times, it doesn't verify the runner's body position.
+- **Later enhancement, not v1:** actual movement/form checking would use Google's ML Kit Pose Detection (on-device, free, no API key) via the front camera, propping the phone up before a stretch. Worth being precise about what this can and can't do: it can track rough body landmark positions and rep-like motion, it can't judge whether a stretch is being done *correctly* or is actually effective — so it's scoped as assistive posture feedback for runners who opt in and prop their phone, not as a "compliance monitor," and it only works for the pre/post-run session (never mid-run).
+
 ### Adaptive Scheduling
 On a missed session, in order of preference: **compress** (shift remaining sessions later in the week) → **shift** (slide the whole plan forward) → **regress-and-repeat** (repeat the last comfortable week on a long gap or low RPE trend). The runner is never shown a failed plan, only a recalculated one.
 

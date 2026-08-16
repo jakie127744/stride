@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Minimal pre-Compose window theme — actual theming happens in StrideTheme (Compose).
+         This only needs to cover the moment before setContent() runs, and the launcher icon. -->
+    <style name="Theme.Stride" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">@android:color/white</item>
+    </style>
+</resources>

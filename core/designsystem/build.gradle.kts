@@ -25,7 +25,12 @@ android {
 }
 
 dependencies {
-    // Phase 2 scaffold — module is empty; real dependencies land with its Phase 3/4/5 implementation.
     implementation(libs.androidx.core.ktx)
+
+    api(platform(libs.androidx.compose.bom)) // api: every module using StrideTheme needs the BOM's version alignment too
+    api(libs.androidx.compose.ui)
+    api(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+
     testImplementation(libs.junit)
 }
