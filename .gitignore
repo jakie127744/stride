@@ -19,3 +19,8 @@ google-services.json
 /*/build/
 /*/*/build/
 .kotlin/
+
+# Working copy of the logo lives loose at repo root during design review —
+# canonical committed copy is docs/branding/stride-logo.jpg
+/Stride_logo.JPG
+/stride_logo.jpg

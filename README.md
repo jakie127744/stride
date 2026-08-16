@@ -1,3 +1,5 @@
+<img src="docs/branding/stride-logo.jpg" alt="Stride app icon" width="88">
+
 # Stride
 
 A 5K training app for Android that starts you from the couch and finishes with a pacing coach serious enough for your fastest club runner. One app, two athletes.
