@@ -55,6 +55,17 @@ class RunSessionEngineTest {
         dispatcherProvider = FixedDispatcherProvider(dispatcher),
     )
 
+    /** A GPS fix with a realistic good accuracy — GpsSmoother's default 30m threshold otherwise
+     * rejects the plain TrackPoint(...) construction's implicit accuracyMeters. */
+    private fun fix(latitude: Double, longitude: Double, timestampMillis: Long, altitudeMeters: Double = 10.0) =
+        TrackPoint(
+            latitude = latitude,
+            longitude = longitude,
+            altitudeMeters = altitudeMeters,
+            timestampMillis = timestampMillis,
+            accuracyMeters = 10f,
+        )
+
     @Test
     fun `ticks down and finishes with estimated distance for treadmill sessions`() = runTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
@@ -102,9 +113,11 @@ class RunSessionEngineTest {
         engine.start(planSessionId = 1, outdoor = true, shoeId = null)
         runCurrent()
 
-        locationTracker.emit(TrackPoint(latitude = 40.0000, longitude = -73.0000, altitudeMeters = 10.0, timestampMillis = 0))
+        // ~11m per fix, 3s apart ≈ 3.7 m/s — a real running pace, comfortably under
+        // GpsSmoother's default plausible-speed cap (10 m/s) so these aren't rejected as jumps.
+        locationTracker.emit(fix(latitude = 40.00000, longitude = -73.0000, timestampMillis = 0))
         runCurrent()
-        locationTracker.emit(TrackPoint(latitude = 40.0010, longitude = -73.0000, altitudeMeters = 10.0, timestampMillis = 1_000))
+        locationTracker.emit(fix(latitude = 40.00010, longitude = -73.0000, timestampMillis = 3_000))
         runCurrent()
 
         val distanceBeforePause = engine.state.value.gpsDistanceMeters
@@ -116,7 +129,7 @@ class RunSessionEngineTest {
         assertTrue(engine.state.value.isPaused)
 
         // Drift while "paused" — must not be counted.
-        locationTracker.emit(TrackPoint(latitude = 40.0020, longitude = -73.0000, altitudeMeters = 10.0, timestampMillis = 2_000))
+        locationTracker.emit(fix(latitude = 40.00020, longitude = -73.0000, timestampMillis = 6_000))
         runCurrent()
 
         assertEquals(distanceBeforePause, engine.state.value.gpsDistanceMeters, 0.0001)

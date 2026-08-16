@@ -7,6 +7,8 @@ import com.stride.app.ui.WeatherUiState
 import com.stride.core.common.RunEnvironment
 import com.stride.core.common.Track
 import com.stride.core.common.DispatcherProvider
+import com.stride.core.common.GpsFix
+import com.stride.core.common.GpsSmoother
 import com.stride.core.common.WeatherSnapshot
 import com.stride.core.common.findStretchExercise
 import com.stride.core.common.haversineDistanceMeters
@@ -86,6 +88,10 @@ class RunSessionEngine @Inject constructor(
     private var locationJob: Job? = null
     private var startedAt: Instant = Instant.now()
 
+    // Reset per start() (a new run must not compare its first fix's plausibility against the
+    // *previous* run's last position) — see docs/roadmap.md Phase 5 "GPS smoothing".
+    private var gpsSmoother = GpsSmoother()
+
     /** Identifies "which run is this" so a re-attaching ViewModel (the UI came back after the
      * process survived backgrounding) doesn't restart an already-in-progress session from
      * scratch — only a genuinely new session (different args, or the previous one finished)
@@ -100,6 +106,7 @@ class RunSessionEngine @Inject constructor(
         tickJob?.cancel()
         locationJob?.cancel()
         startedAt = Instant.now()
+        gpsSmoother = GpsSmoother()
         _state.value = ActiveRunUiState(isOutdoor = outdoor)
 
         engineScope.launch {
@@ -130,6 +137,15 @@ class RunSessionEngine @Inject constructor(
     }
 
     private fun accumulateTrackPoint(point: TrackPoint) {
+        // Filtered before anything else — a noisy/jumped fix shouldn't touch trackPoints,
+        // gpsDistanceMeters, or even elevationGainMeters. GpsSmoother.accept() is stateful
+        // (remembers the last *accepted* fix) and must be called exactly once per point, so this
+        // has to happen outside _state.update's lambda — MutableStateFlow.update can in
+        // principle retry its lambda on contention, which would double-count a fix against the
+        // smoother's internal state.
+        val fix = GpsFix(point.latitude, point.longitude, point.accuracyMeters, point.timestampMillis)
+        if (!gpsSmoother.accept(fix)) return
+
         // Paused means paused — a runner standing at a crosswalk (still carrying the phone,
         // still getting drifting GPS fixes) shouldn't have that drift counted into the final
         // distance. Dropping fixes while paused, rather than just freezing the tick loop, is

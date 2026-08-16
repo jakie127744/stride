@@ -27,6 +27,12 @@ data class TrackPoint(
      * Good enough for a live "you're climbing" cue, not for precise elevation-gain stats. */
     val altitudeMeters: Double,
     val timestampMillis: Long,
+    /** OS-reported horizontal accuracy radius in meters — feeds `RunSessionEngine`'s
+     * `GpsSmoother` (see docs/roadmap.md Phase 5 "GPS smoothing"). `Location.hasAccuracy()` is
+     * false only in genuinely rare cases (very old/degraded fixes); `Float.MAX_VALUE` here is a
+     * deliberately-fails-the-accuracy-check sentinel rather than silently trusting an unrated fix.
+     */
+    val accuracyMeters: Float,
 )
 
 /**
@@ -64,7 +70,7 @@ class FusedLocationTracker @Inject constructor(
     override suspend fun lastKnownLocation(): TrackPoint? {
         if (!hasPermission()) return null
         val location = runCatching { client.lastLocation.await() }.getOrNull() ?: return null
-        return TrackPoint(location.latitude, location.longitude, location.altitude, location.time)
+        return location.toTrackPoint()
     }
 
     @SuppressLint("MissingPermission")
@@ -76,12 +82,18 @@ class FusedLocationTracker @Inject constructor(
         val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3_000L).build()
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let {
-                    trySend(TrackPoint(it.latitude, it.longitude, it.altitude, it.time))
-                }
+                result.lastLocation?.let { trySend(it.toTrackPoint()) }
             }
         }
         client.requestLocationUpdates(request, callback, context.mainLooper)
         awaitClose { client.removeLocationUpdates(callback) }
     }
+
+    private fun android.location.Location.toTrackPoint() = TrackPoint(
+        latitude = latitude,
+        longitude = longitude,
+        altitudeMeters = altitude,
+        timestampMillis = time,
+        accuracyMeters = if (hasAccuracy()) accuracy else Float.MAX_VALUE,
+    )
 }
