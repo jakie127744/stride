@@ -22,8 +22,12 @@ class RunRepositoryImpl @Inject constructor(
 
     override suspend fun recordRun(run: RunSessionEntity): Long = database.withTransaction {
         val id = runSessionDao.insert(run)
-        if (run.shoeId != null) {
-            database.shoeDao().addDistance(run.shoeId, run.distanceMeters)
+        // Local val, not `run.shoeId` inline: Kotlin won't smart-cast a nullable property
+        // declared in another module even after a null check, since it can't guarantee the
+        // getter is side-effect-free across a module boundary.
+        val shoeId = run.shoeId
+        if (shoeId != null) {
+            database.shoeDao().addDistance(shoeId, run.distanceMeters)
         }
         id
     }

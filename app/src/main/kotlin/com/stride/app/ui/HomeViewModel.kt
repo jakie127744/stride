@@ -7,7 +7,7 @@ import com.stride.core.data.repository.RunRepository
 import com.stride.core.database.entity.PlanEntity
 import com.stride.core.database.entity.PlanSessionEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,6 +30,7 @@ class HomeViewModel @Inject constructor(
     runRepository: RunRepository,
 ) : ViewModel() {
 
+    @OptIn(ExperimentalCoroutinesApi::class) // flatMapLatest — stable in practice, still marked experimental upstream
     val uiState: StateFlow<HomeUiState> = planRepository.observeActivePlan()
         .flatMapLatest { plan ->
             val sessions = if (plan != null) {
