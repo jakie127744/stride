@@ -16,7 +16,7 @@ import com.stride.app.ui.ActiveRunScreen
 import com.stride.app.ui.HistoryScreen
 import com.stride.app.ui.HomeScreen
 import com.stride.app.ui.InsightsScreen
-import com.stride.app.ui.LiveTrackPlaceholderScreen
+import com.stride.app.ui.LiveTrackScreen
 import com.stride.app.ui.OnboardingScreen
 import com.stride.app.ui.PreRunEnvironmentScreen
 import com.stride.app.ui.RunSummaryScreen
@@ -121,6 +121,6 @@ fun StrideNavHost(
         }
         composable<Destination.History> { HistoryScreen() }
         composable<Destination.Insights> { InsightsScreen() }
-        composable<Destination.LiveTrack> { LiveTrackPlaceholderScreen() }
+        composable<Destination.LiveTrack> { LiveTrackScreen() }
     }
 }

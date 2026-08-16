@@ -23,10 +23,10 @@ import com.stride.core.designsystem.LocalReducedMotion
 import com.stride.core.designsystem.StrideMotion
 
 /**
- * Every real screen replaces one of these as its :feature:* module ships (Phase 4–6) —
- * this exists to prove the nav graph + entrance-motion pattern works end-to-end now, and to
- * give every route a fade+scale-in "arrival" so the app doesn't feel static while screens
- * fill in one by one. Reduced-motion users get a plain instant appearance instead.
+ * Every destination in the nav graph is a real screen now — no current callers of this. Kept
+ * as reusable infrastructure for whatever the next new destination is (custom interval builder,
+ * multi-week plan view, etc. — Phase 6), rather than re-deriving the same fade+scale-in
+ * "arrival" pattern from scratch. Reduced-motion users get a plain instant appearance instead.
  */
 @Composable
 fun PlaceholderScreen(title: String, subtitle: String) {
@@ -58,5 +58,3 @@ fun PlaceholderScreen(title: String, subtitle: String) {
         }
     }
 }
-
-@Composable fun LiveTrackPlaceholderScreen() = PlaceholderScreen("Live Track", "Safety sharing — Phase 5")

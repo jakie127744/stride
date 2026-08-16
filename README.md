@@ -9,7 +9,7 @@ Build sequence and current status: [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Status
 
-🚧 Pre-alpha. Core architecture is in place (Room + repositories + Hilt DI + navigation + M3 theme) and syncs cleanly in Android Studio — feature screens are still placeholders as their phases land (see roadmap).
+🚧 Pre-alpha, but every screen in the nav graph is real and working: onboarding, a countdown-timer active run with real GPS tracking, real weather (Open-Meteo), voice cues, generic music control, a shoe log, run history, computed insights, and location-share Live Track. See [`docs/roadmap.md`](docs/roadmap.md) for exactly what's real vs. still scoped down from the full spec (no basemap tiles yet, no background execution, no persistent Live Track link). Build, lint, and unit tests all verified clean; build-verified on a physical device.
 
 ## Module structure
 
@@ -32,7 +32,7 @@ feature/
   insights/              performance statistics — pace trend, training load, VO2 max, PRs
 ```
 
-`:feature:*` modules depend only on `:core:*` — never on each other.
+`:feature:*` modules depend only on `:core:*` — never on each other. Note: the real screens built so far live directly under `:app/src/.../ui` rather than in these `:feature:*` modules — the pulled-forward vertical slice (see roadmap) moved faster than the module split, and `:feature:*` is still the empty Phase 2 scaffold. Migrating each screen into its proper feature module is worth doing before this grows much further.
 
 ## Building
 
