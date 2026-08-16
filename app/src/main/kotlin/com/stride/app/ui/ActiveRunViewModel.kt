@@ -46,6 +46,7 @@ class ActiveRunViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val planRepository: PlanRepository,
     private val runRepository: RunRepository,
+    private val voiceCue: VoiceCueSpeaker,
 ) : ViewModel() {
 
     private val route: Destination.ActiveRun = savedStateHandle.toRoute()
@@ -69,8 +70,27 @@ class ActiveRunViewModel @Inject constructor(
                 currentIndex = 0,
                 remainingSeconds = steps.first().durationSeconds ?: 0,
             )
+            voiceCue.speak(cueFor(steps.first()))
             resumeTicking()
         }
+    }
+
+    /** "Walk for 4 minutes" / "Run for 1 minute 30 seconds" — spoken at the start of every step. */
+    private fun cueFor(step: SessionStepEntity): String {
+        val action = when (step.stepType) {
+            StepType.WALK -> "Walk"
+            StepType.RUN -> "Run"
+            StepType.REST -> "Rest"
+        }
+        val seconds = step.durationSeconds ?: return action
+        val minutes = seconds / 60
+        val remSeconds = seconds % 60
+        val duration = buildString {
+            if (minutes > 0) append("$minutes minute${if (minutes != 1) "s" else ""}")
+            if (minutes > 0 && remSeconds > 0) append(" ")
+            if (remSeconds > 0 || minutes == 0) append("$remSeconds second${if (remSeconds != 1) "s" else ""}")
+        }
+        return "$action for $duration"
     }
 
     private fun demoSteps(): List<SessionStepEntity> = listOf(
@@ -106,10 +126,9 @@ class ActiveRunViewModel @Inject constructor(
         val current = _state.value
         val nextIndex = current.currentIndex + 1
         if (nextIndex < current.steps.size) {
-            _state.value = current.copy(
-                currentIndex = nextIndex,
-                remainingSeconds = current.steps[nextIndex].durationSeconds ?: 0,
-            )
+            val nextStep = current.steps[nextIndex]
+            _state.value = current.copy(currentIndex = nextIndex, remainingSeconds = nextStep.durationSeconds ?: 0)
+            voiceCue.speak(cueFor(nextStep))
         } else {
             finish()
         }
@@ -136,6 +155,7 @@ class ActiveRunViewModel @Inject constructor(
             ),
         )
         planSessionId?.let { planRepository.markSessionCompleted(it) }
+        voiceCue.speak("Session complete. Nice work.")
         _state.value = _state.value.copy(isFinished = true, finishedRunId = runId)
     }
 
